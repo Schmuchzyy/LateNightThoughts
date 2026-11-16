@@ -4,7 +4,7 @@
 
 A quiet place to think out loud. Write down what's keeping you up, and a calm, grounded AI friend writes back in a few honest sentences. No toxic positivity, no hype. Save the thoughts worth keeping as tagged notes, and once a week ask it to reflect on what you wrote.
 
-**Live demo:** _coming with the first deploy_ · works on phone and desktop, no sign-up and no API key needed.
+**Live demo: [latenightthoughts.vercel.app](https://latenightthoughts.vercel.app)** · works on phone and desktop, installable, no sign-up and no API key needed.
 
 ![Late Night Thoughts in dark mode: a thought, the AI's reply, and tagged notes](docs/screenshot.png)
 
