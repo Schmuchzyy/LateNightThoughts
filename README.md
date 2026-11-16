@@ -4,7 +4,7 @@
 
 A quiet place to think out loud. Write down what's keeping you up, and a calm, grounded AI friend writes back in a few honest sentences. No toxic positivity, no hype. Save the thoughts worth keeping as tagged notes, and once a week ask it to reflect on what you wrote.
 
-**Live demo: [latenightthoughts.vercel.app](https://latenightthoughts.vercel.app)** · works on phone and desktop, installable, no sign-up and no API key needed.
+**Live: [latenightthoughts.vercel.app](https://latenightthoughts.vercel.app)** · works on phone and desktop, installable, no sign-up. Notes work straight away. For AI replies, paste your own key (Google Gemini and Groq keys are free), or tap **See an example** to see what a reply looks like.
 
 ![Late Night Thoughts in dark mode: a thought, the AI's reply, and tagged notes](docs/screenshot.png)
 
@@ -16,7 +16,8 @@ A quiet place to think out loud. Write down what's keeping you up, and a calm, g
 
 ## What it does
 
-- **Instant reply, no key needed.** The free demo mode sends your thought through a small serverless function to Google Gemini and streams the reply back as it's written.
+- **A calm reply, streamed as it's written,** from the AI provider you choose with your own key. The key stays in your browser.
+- **Optional free demo mode:** if the site owner sets a server-side `GEMINI_API_KEY`, visitors can try it without a key. A small serverless function forwards the thought to Gemini with rate limits. The public deployment runs without it, and the app shows a clearly labelled example reply instead.
 - **Bring your own key** for 11 providers: Anthropic, OpenAI, Google, xAI, DeepSeek, Groq, Mistral, Perplexity, Together, OpenRouter, or any OpenAI-compatible endpoint (including a local model).
 - **A model picker that doesn't go stale:** each provider gets a short list of current models with plain labels ("fastest, cheapest", "most capable"). **Load models from your account** fetches the live list from the provider, and **Custom model ID…** takes any model.
 - **Test connection** checks your key and model with a tiny request before you save. When something fails, errors say what to do next: wrong key, unknown model, out of credit or rate limited. Each reply is labelled with the model that actually wrote it.
@@ -31,7 +32,7 @@ A quiet place to think out loud. Write down what's keeping you up, and a calm, g
 | What | Where it goes |
 |---|---|
 | Your notes | Only this browser's `localStorage`. Nothing is uploaded. Export them to back them up. |
-| Free demo replies | Your thought (or, for "Reflect on my week", that week's notes) goes to this site's `/api/reflect` function, which forwards it to Google Gemini and doesn't store it. The demo uses Gemini's free tier, where Google may use prompts to improve its products. Use your own key if that matters to you. |
+| Free demo replies (only if enabled) | Your thought (or, for "Reflect on my week", that week's notes) goes to this site's `/api/reflect` function, which forwards it to Google Gemini and doesn't store it. The demo uses Gemini's free tier, where Google may use prompts to improve its products. Use your own key if that matters to you. |
 | Your own API key | Stays in your browser and is sent **only** to the provider you picked, straight from your browser. It never touches this site's server. By default it lives in `sessionStorage` and is forgotten when you close the tab. Tick "Remember my keys on this device" to keep it in `localStorage`, and use "Forget all saved keys" to wipe it. |
 
 The site owner's Gemini key is a server-side environment variable. It is never sent to the browser and isn't in this repo.
@@ -82,4 +83,4 @@ npm test
 2. Under **Settings → Environment Variables**, add `GEMINI_API_KEY`. Optionally add `DEMO_MODELS`, a comma-separated fallback list that defaults to `gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemini-2.5-flash-lite`.
 3. Redeploy. Optionally add a WAF rate-limit rule for `/api/reflect` under **Firewall**.
 
-Without `GEMINI_API_KEY` the app still works: demo mode shows as unavailable and visitors can use their own key.
+Without `GEMINI_API_KEY` the app still works fully with visitors' own keys. The demo option is greyed out, and new visitors see a short "add a key / see an example" prompt.

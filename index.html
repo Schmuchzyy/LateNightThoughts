@@ -364,6 +364,34 @@
       margin-top: 14px;
     }
 
+    .setup-hint {
+      margin-top: 16px;
+      padding: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-2);
+    }
+
+    .setup-hint strong { color: var(--text); font-weight: 600; }
+
+    .setup-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .field-hint a, .setup-hint a { color: var(--accent); font-weight: 500; }
+
+    .example-thought {
+      font-style: italic;
+      color: var(--text-2);
+      margin-bottom: 10px;
+    }
+
     .error-box {
       display: none;
       margin-top: 14px;
@@ -941,10 +969,17 @@
         <div class="thought-divider"></div>
         <div class="thought-footer">
           <div class="thought-footer-left">
-            <button class="mode-chip" id="modeChip" type="button" aria-haspopup="dialog"><span class="mode-dot" id="modeDot" aria-hidden="true"></span><span id="modeText">Free demo</span></button>
+            <button class="mode-chip" id="modeChip" type="button" aria-haspopup="dialog"><span class="mode-dot" id="modeDot" aria-hidden="true"></span><span id="modeText">AI settings</span></button>
             <span class="send-hint"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> to send</span>
           </div>
           <button class="btn-primary" id="sendBtn" type="button">Send it</button>
+        </div>
+        <div class="setup-hint" id="setupHint" hidden>
+          <p>Replies come from an AI model using <strong>your own API key</strong>, which stays in this browser. Google Gemini and Groq keys are free.</p>
+          <div class="setup-actions">
+            <button type="button" class="btn-secondary" id="addKeyBtn" aria-haspopup="dialog">Add a key</button>
+            <button type="button" class="btn-ghost" id="exampleBtn">See an example</button>
+          </div>
         </div>
         <div class="error-box" id="errorBox" role="alert"></div>
         <div class="response-box" id="responseBox" aria-live="polite" aria-busy="false">
@@ -1037,7 +1072,8 @@
 
         <div class="field-group" id="keyGroup">
           <label class="field-label" for="apiKeyInput">API key</label>
-          <input type="password" id="apiKeyInput" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
+          <input type="password" id="apiKeyInput" placeholder="sk-ant-…" autocomplete="off" spellcheck="false" aria-describedby="keyHint">
+          <p class="field-hint" id="keyHint"></p>
         </div>
 
         <div class="field-group" id="modelGroup">
@@ -1338,6 +1374,7 @@
       renderModelOptions(p, modelFor(p));
       setModelHint(p);
       renderPrivacyNote(p);
+      renderKeyHint(p);
     }
 
     function renderModelOptions(p, selected) {
@@ -1494,8 +1531,10 @@
     }
 
     function openSettings() {
-      $('providerSelect').value = cfg.provider;
-      fillSettings(cfg.provider);
+      // No server demo on this site: start people on Gemini, which has free keys.
+      const p = cfg.provider === 'demo' && demoEnabled === false ? 'gemini' : cfg.provider;
+      $('providerSelect').value = p;
+      fillSettings(p);
       $('savedMsg').classList.remove('visible');
       showDialog($('settingsModal'), $('providerSelect'));
     }
@@ -1542,25 +1581,70 @@
       flashSaved.t = setTimeout(() => msg.classList.remove('visible'), 2200);
     }
 
+    // True when a reply can actually be requested with the saved settings.
+    function aiReady() {
+      const p = cfg.provider;
+      if (p === 'demo') return demoEnabled !== false;
+      if (p === 'custom') return !!cfg.customEndpoint;
+      return !!keys[p];
+    }
+
     function updateModeChip() {
       const p = cfg.provider;
-      const dot = $('modeDot');
-      let text, ok;
-      if (p === 'demo') {
-        ok = demoEnabled !== false;
-        text = demoEnabled === false ? 'Demo unavailable · add a key' : 'Free demo · Gemini';
-      } else {
-        ok = !!keys[p] || p === 'custom';
-        text = ok ? `${PROVIDERS[p].label} · your key` : `${PROVIDERS[p].label} · add your key`;
-      }
+      const ok = aiReady();
+      let text;
+      if (p === 'demo') text = demoEnabled === false ? 'No AI yet · add a key' : 'Free demo · Gemini';
+      else text = ok ? `${PROVIDERS[p].label} · your key` : `${PROVIDERS[p].label} · add your key`;
       $('modeText').textContent = text;
-      dot.classList.toggle('off', !ok);
+      $('modeDot').classList.toggle('off', !ok);
       $('modeChip').setAttribute('aria-label', `AI: ${text}. Open AI settings`);
+      // Only nudge once we know the free demo isn't there.
+      $('setupHint').hidden = ok || (p === 'demo' && demoEnabled === null);
+    }
+
+    // Where to get a key; `free` marks providers with a no-cost tier.
+    const KEY_LINKS = {
+      gemini:     { url: 'https://aistudio.google.com/apikey', host: 'aistudio.google.com', free: true },
+      groq:       { url: 'https://console.groq.com/keys', host: 'console.groq.com', free: true },
+      anthropic:  { url: 'https://console.anthropic.com/settings/keys', host: 'console.anthropic.com' },
+      openai:     { url: 'https://platform.openai.com/api-keys', host: 'platform.openai.com' },
+      openrouter: { url: 'https://openrouter.ai/keys', host: 'openrouter.ai' },
+      mistral:    { url: 'https://console.mistral.ai/api-keys', host: 'console.mistral.ai' },
+      deepseek:   { url: 'https://platform.deepseek.com/api_keys', host: 'platform.deepseek.com' },
+    };
+
+    function renderKeyHint(p) {
+      const link = KEY_LINKS[p];
+      $('keyHint').innerHTML = link
+        ? `Get a key at <a href="${link.url}" target="_blank" rel="noopener noreferrer">${link.host}</a>${link.free ? ' (free tier available)' : ''}.`
+        : '';
+    }
+
+    // A clearly labelled sample, so people can see what the app does before adding a key.
+    const EXAMPLE = {
+      thought: "I keep wondering if I picked the right career. It's 2am and I can't sleep.",
+      reply: "That sounds like a lot to carry this late at night. It makes sense that it's still turning over in your head; things that matter usually do. You don't need to figure it all out right now. Sometimes just naming it is enough for tonight.",
+    };
+
+    function showExample() {
+      const box = $('responseBox'), text = $('responseText');
+      $('errorBox').style.display = 'none';
+      $('responseLabel').textContent = 'example · not a live reply';
+      text.textContent = '';
+      const q = document.createElement('p');
+      q.className = 'example-thought';
+      q.textContent = `“${EXAMPLE.thought}”`;
+      text.append(q, document.createTextNode(EXAMPLE.reply));
+      currentAiResponse = '';
+      $('saveAiBtn').hidden = true;
+      box.style.display = 'block';
     }
 
     $('settingsBtn').addEventListener('click', openSettings);
     $('modeChip').addEventListener('click', openSettings);
     $('privacyLink').addEventListener('click', openSettings);
+    $('addKeyBtn').addEventListener('click', openSettings);
+    $('exampleBtn').addEventListener('click', showExample);
     $('themeBtn').addEventListener('click', toggleTheme);
     $('providerSelect').addEventListener('change', e => fillSettings(e.target.value));
     $('modelSelect').addEventListener('change', () => {
@@ -1744,6 +1828,9 @@
       } catch {
         demoEnabled = false;
       }
+      const demoOption = $('providerSelect').querySelector('option[value="demo"]');
+      demoOption.disabled = !demoEnabled;
+      demoOption.textContent = demoEnabled ? 'Free demo (Gemini, rate limited)' : 'Free demo (not available on this site)';
       updateModeChip();
     }
 
@@ -1796,19 +1883,24 @@
     function showError(message) {
       const box = $('errorBox');
       box.textContent = message;
-      if (/settings|key/i.test(message)) {
+      const addButton = (label, fn) => {
         const b = document.createElement('button');
         b.type = 'button';
-        b.textContent = 'Open AI settings';
-        b.addEventListener('click', openSettings);
+        b.textContent = label;
+        b.addEventListener('click', fn);
         box.append(b);
-      }
+      };
+      if (/settings|key/i.test(message)) addButton('Open AI settings', openSettings);
+      if (!aiReady()) addButton('See an example', showExample);
       box.style.display = 'block';
     }
+
+    const NEEDS_KEY = 'Add an AI key to get a reply. It stays in this browser, and Google Gemini and Groq keys are free.';
 
     function sendThought() {
       const thought = $('thoughtInput').value.trim();
       if (!thought) { $('thoughtInput').focus(); return; }
+      if (!aiReady()) { showError(NEEDS_KEY); return; }
       runReply('thought', thought, '', $('sendBtn'), 'thinking…');
     }
 
@@ -1818,6 +1910,11 @@
         .filter(n => new Date(n.timestamp).getTime() >= weekAgo)
         .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
       if (!recent.length) { showToast('No notes from the last 7 days yet. Save a few first.'); return; }
+      if (!aiReady()) {
+        showError(NEEDS_KEY);
+        $('errorBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
       // Keep the newest notes if the week is too long to send.
       const lines = [];
       let size = 0;
