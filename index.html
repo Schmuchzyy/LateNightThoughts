@@ -7,7 +7,14 @@
   <meta name="theme-color" content="#0d0d14" media="(prefers-color-scheme: dark)">
   <meta name="theme-color" content="#f5f4f0" media="(prefers-color-scheme: light)">
   <title>Late Night Thoughts</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌙</text></svg>">
+  <meta property="og:title" content="Late Night Thoughts">
+  <meta property="og:description" content="A quiet place to think out loud. Write what's keeping you up and a calm AI friend writes back. Try it free, no sign-up.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
@@ -681,6 +688,50 @@
       line-height: 1.5;
     }
 
+    .field-hint:empty { display: none; }
+
+    .label-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .link-btn {
+      padding: 0;
+      background: none;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .link-btn:hover { text-decoration: underline; }
+    .link-btn:disabled { color: var(--text-2); cursor: default; text-decoration: none; }
+
+    #modelInput { margin-top: 6px; }
+
+    .test-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .test-result {
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text-2);
+      flex: 1;
+      min-width: 0;
+    }
+
+    .test-result.ok  { color: #16a34a; }
+    .test-result.bad { color: #b91c1c; }
+    [data-theme="dark"] .test-result.ok  { color: #4ade80; }
+    [data-theme="dark"] .test-result.bad { color: #f87171; }
+
+    optgroup { font-weight: 600; }
+
     .check-row {
       display: flex;
       align-items: flex-start;
@@ -953,40 +1004,56 @@
       </div>
       <div class="settings-fields">
 
-        <div class="field-row">
-          <div class="field-group" style="flex: 1.4;">
-            <label class="field-label" for="providerSelect">Provider</label>
-            <select id="providerSelect">
-              <option value="demo">Free demo (no key needed)</option>
+        <div class="field-group">
+          <label class="field-label" for="providerSelect">Provider</label>
+          <select id="providerSelect">
+            <optgroup label="No key needed">
+              <option value="demo">Free demo (Gemini, rate limited)</option>
+            </optgroup>
+            <optgroup label="Popular · your own key">
               <option value="anthropic">Anthropic (Claude)</option>
               <option value="openai">OpenAI (GPT)</option>
               <option value="gemini">Google (Gemini)</option>
+            </optgroup>
+            <optgroup label="More providers · your own key">
               <option value="xai">xAI (Grok)</option>
               <option value="deepseek">DeepSeek</option>
-              <option value="groq">Groq (Llama · fast)</option>
+              <option value="groq">Groq (very fast)</option>
               <option value="mistral">Mistral</option>
               <option value="perplexity">Perplexity</option>
               <option value="together">Together AI</option>
-              <option value="openrouter">OpenRouter (all models)</option>
-              <option value="custom">Custom (OpenAI-compatible)</option>
-            </select>
-          </div>
-          <div class="field-group" id="modelGroup">
-            <label class="field-label" for="modelInput">Model</label>
-            <input type="text" id="modelInput" list="modelSuggestions" placeholder="model name" autocomplete="off" spellcheck="false" aria-describedby="modelHint">
-            <datalist id="modelSuggestions"></datalist>
-          </div>
+            </optgroup>
+            <optgroup label="Advanced">
+              <option value="openrouter">OpenRouter (hundreds of models)</option>
+              <option value="custom">Custom (OpenAI-compatible, e.g. a local model)</option>
+            </optgroup>
+          </select>
         </div>
-        <p class="field-hint" id="modelHint">Pick a suggestion or type any model ID your provider offers.</p>
+
+        <div class="field-group" id="endpointGroup" hidden>
+          <label class="field-label" for="endpointInput">Endpoint URL</label>
+          <input type="text" id="endpointInput" placeholder="http://localhost:11434/v1/chat/completions" spellcheck="false">
+        </div>
 
         <div class="field-group" id="keyGroup">
           <label class="field-label" for="apiKeyInput">API key</label>
           <input type="password" id="apiKeyInput" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
         </div>
 
-        <div class="field-group" id="endpointGroup" hidden>
-          <label class="field-label" for="endpointInput">Endpoint URL</label>
-          <input type="text" id="endpointInput" placeholder="https://your-endpoint.com/v1/chat/completions" spellcheck="false">
+        <div class="field-group" id="modelGroup">
+          <div class="label-row">
+            <label class="field-label" for="modelSelect">Model</label>
+            <button type="button" class="link-btn" id="loadModelsBtn">Load models from your account</button>
+          </div>
+          <select id="modelSelect" aria-describedby="modelHint"></select>
+          <label for="modelInput" class="sr-only">Custom model ID</label>
+          <input type="text" id="modelInput" placeholder="exact model ID, e.g. my-model-v2" autocomplete="off" spellcheck="false" hidden>
+          <p class="field-hint" id="modelHint" aria-live="polite"></p>
+        </div>
+
+        <div class="test-row">
+          <button type="button" class="btn-secondary" id="testBtn">Test connection</button>
+          <span class="test-result" id="testResult" role="status" aria-live="polite"></span>
         </div>
 
         <label class="check-row" id="rememberRow" for="rememberKeys">
@@ -1035,20 +1102,65 @@
     // ── Provider config ────────────────────────────────────────────────────────
     // Model IDs checked against each provider's docs in November 2026. The model
     // field accepts any ID, so newer models work without a code change.
+    // `models` is the curated list shown in the dropdown (first = default).
+    // `modelsUrl` is the provider's "list models" endpoint, used by "Load models from your account".
+    const m = (id, label) => ({ id, label });
     const PROVIDERS = {
-      demo:       { label: 'Gemini',     host: 'this site',                       format: 'demo',      defaultModel: '',                         keyPlaceholder: '',                  models: [] },
-      anthropic:  { label: 'Claude',     host: 'api.anthropic.com',               format: 'anthropic', defaultModel: 'claude-sonnet-5-5',        keyPlaceholder: 'sk-ant-…',          models: ['claude-sonnet-5-5', 'claude-haiku-5-5', 'claude-opus-5-5'] },
-      openai:     { label: 'GPT',        host: 'api.openai.com',                  format: 'openai',    defaultModel: 'gpt-6.1-terra',            keyPlaceholder: 'sk-…',              models: ['gpt-6.1-terra', 'gpt-6-luna', 'gpt-6.1-sol'], endpoint: 'https://api.openai.com/v1/chat/completions', tokenParam: 'max_completion_tokens' },
-      gemini:     { label: 'Gemini',     host: 'generativelanguage.googleapis.com', format: 'gemini',  defaultModel: 'gemini-3.5-flash-lite',    keyPlaceholder: 'AIza…',             models: ['gemini-3.5-flash-lite', 'gemini-3.6-flash', 'gemini-3.8-flash'] },
-      xai:        { label: 'Grok',       host: 'api.x.ai',                        format: 'openai',    defaultModel: 'grok-4.7',                 keyPlaceholder: 'xai-…',             models: ['grok-4.7', 'grok-4.3'], endpoint: 'https://api.x.ai/v1/chat/completions' },
-      deepseek:   { label: 'DeepSeek',   host: 'api.deepseek.com',                format: 'openai',    defaultModel: 'deepseek-flash',           keyPlaceholder: 'sk-…',              models: ['deepseek-flash', 'deepseek-v4-pro'], endpoint: 'https://api.deepseek.com/chat/completions' },
-      groq:       { label: 'Groq',       host: 'api.groq.com',                    format: 'openai',    defaultModel: 'llama-3.3-70b-versatile',  keyPlaceholder: 'gsk_…',             models: ['llama-3.3-70b-versatile', 'openai/gpt-oss-120b', 'llama-3.1-8b-instant'], endpoint: 'https://api.groq.com/openai/v1/chat/completions' },
-      mistral:    { label: 'Mistral',    host: 'api.mistral.ai',                  format: 'openai',    defaultModel: 'mistral-large-latest',     keyPlaceholder: 'your-mistral-key',  models: ['mistral-large-latest', 'mistral-small-latest'], endpoint: 'https://api.mistral.ai/v1/chat/completions' },
-      perplexity: { label: 'Perplexity', host: 'api.perplexity.ai',               format: 'openai',    defaultModel: 'sonar',                    keyPlaceholder: 'pplx-…',            models: ['sonar', 'sonar-pro'], endpoint: 'https://api.perplexity.ai/chat/completions' },
-      together:   { label: 'Together',   host: 'api.together.xyz',                format: 'openai',    defaultModel: 'openai/gpt-oss-120b',      keyPlaceholder: 'your-together-key', models: ['openai/gpt-oss-120b', 'deepseek-ai/DeepSeek-V4.1-Flash', 'Qwen/Qwen3.8-Flash'], endpoint: 'https://api.together.xyz/v1/chat/completions' },
-      openrouter: { label: 'OpenRouter', host: 'openrouter.ai',                   format: 'openai',    defaultModel: 'openai/gpt-6.1-terra',     keyPlaceholder: 'sk-or-…',           models: ['openai/gpt-6.1-terra', 'anthropic/claude-sonnet-5.5', 'google/gemini-3.5-flash-lite'], endpoint: 'https://openrouter.ai/api/v1/chat/completions' },
-      custom:     { label: 'AI',         host: 'the endpoint you set',            format: 'openai',    defaultModel: '',                         keyPlaceholder: 'your-api-key (optional)', models: [] },
+      demo: { label: 'Gemini', host: 'this site', format: 'demo', keyPlaceholder: '', models: [] },
+      anthropic: {
+        label: 'Claude', host: 'api.anthropic.com', format: 'anthropic', keyPlaceholder: 'sk-ant-…',
+        modelsUrl: 'https://api.anthropic.com/v1/models?limit=100',
+        models: [m('claude-sonnet-5-5', 'Claude Sonnet 5.5 · balanced'), m('claude-haiku-5-5', 'Claude Haiku 5.5 · fastest, cheapest'), m('claude-opus-5-5', 'Claude Opus 5.5 · most capable')],
+      },
+      openai: {
+        label: 'GPT', host: 'api.openai.com', format: 'openai', keyPlaceholder: 'sk-…', tokenParam: 'max_completion_tokens',
+        endpoint: 'https://api.openai.com/v1/chat/completions', modelsUrl: 'https://api.openai.com/v1/models',
+        models: [m('gpt-6.1-terra', 'GPT-6.1 Terra · fast, efficient'), m('gpt-6-luna', 'GPT-6 Luna · cheapest'), m('gpt-6.1-sol', 'GPT-6.1 Sol · near-flagship')],
+      },
+      gemini: {
+        label: 'Gemini', host: 'generativelanguage.googleapis.com', format: 'gemini', keyPlaceholder: 'AIza…',
+        modelsUrl: 'https://generativelanguage.googleapis.com/v1beta/models?pageSize=200',
+        models: [m('gemini-3.5-flash-lite', 'Gemini 3.5 Flash-Lite · fastest, cheapest'), m('gemini-3.6-flash', 'Gemini 3.6 Flash · everyday'), m('gemini-3.8-flash', 'Gemini 3.8 Flash · strongest Flash')],
+      },
+      xai: {
+        label: 'Grok', host: 'api.x.ai', format: 'openai', keyPlaceholder: 'xai-…',
+        endpoint: 'https://api.x.ai/v1/chat/completions', modelsUrl: 'https://api.x.ai/v1/models',
+        models: [m('grok-4.7', 'Grok 4.7 · most capable'), m('grok-4.3', 'Grok 4.3 · cheaper')],
+      },
+      deepseek: {
+        label: 'DeepSeek', host: 'api.deepseek.com', format: 'openai', keyPlaceholder: 'sk-…',
+        endpoint: 'https://api.deepseek.com/chat/completions', modelsUrl: 'https://api.deepseek.com/models',
+        models: [m('deepseek-flash', 'DeepSeek Flash · fast'), m('deepseek-v4-pro', 'DeepSeek V4 Pro · stronger')],
+      },
+      groq: {
+        label: 'Groq', host: 'api.groq.com', format: 'openai', keyPlaceholder: 'gsk_…',
+        endpoint: 'https://api.groq.com/openai/v1/chat/completions', modelsUrl: 'https://api.groq.com/openai/v1/models',
+        models: [m('llama-3.3-70b-versatile', 'Llama 3.3 70B · versatile'), m('openai/gpt-oss-120b', 'GPT-OSS 120B · open weights'), m('llama-3.1-8b-instant', 'Llama 3.1 8B · instant')],
+      },
+      mistral: {
+        label: 'Mistral', host: 'api.mistral.ai', format: 'openai', keyPlaceholder: 'your-mistral-key',
+        endpoint: 'https://api.mistral.ai/v1/chat/completions', modelsUrl: 'https://api.mistral.ai/v1/models',
+        models: [m('mistral-large-latest', 'Mistral Large · latest'), m('mistral-small-latest', 'Mistral Small · fast')],
+      },
+      perplexity: {
+        label: 'Perplexity', host: 'api.perplexity.ai', format: 'openai', keyPlaceholder: 'pplx-…',
+        endpoint: 'https://api.perplexity.ai/chat/completions',
+        models: [m('sonar', 'Sonar · fast, web-grounded'), m('sonar-pro', 'Sonar Pro · deeper')],
+      },
+      together: {
+        label: 'Together', host: 'api.together.xyz', format: 'openai', keyPlaceholder: 'your-together-key',
+        endpoint: 'https://api.together.xyz/v1/chat/completions', modelsUrl: 'https://api.together.xyz/v1/models',
+        models: [m('openai/gpt-oss-120b', 'GPT-OSS 120B'), m('deepseek-ai/DeepSeek-V4.1-Flash', 'DeepSeek V4.1 Flash'), m('Qwen/Qwen3.8-Flash', 'Qwen 3.8 Flash')],
+      },
+      openrouter: {
+        label: 'OpenRouter', host: 'openrouter.ai', format: 'openai', keyPlaceholder: 'sk-or-…', listNeedsKey: false,
+        endpoint: 'https://openrouter.ai/api/v1/chat/completions', modelsUrl: 'https://openrouter.ai/api/v1/models',
+        models: [m('openai/gpt-6.1-terra', 'GPT-6.1 Terra (OpenAI)'), m('anthropic/claude-sonnet-5.5', 'Claude Sonnet 5.5 (Anthropic)'), m('google/gemini-3.5-flash-lite', 'Gemini 3.5 Flash-Lite (Google)')],
+      },
+      custom: { label: 'AI', host: 'the endpoint you set', format: 'openai', keyPlaceholder: 'API key (optional for local models)', models: [] },
     };
+    for (const p of Object.values(PROVIDERS)) p.defaultModel = p.models[0]?.id || '';
+    const CUSTOM = '__custom__';
 
     // Defaults shipped by the first version; replaced automatically on upgrade.
     const OLD_DEFAULTS = {
@@ -1207,21 +1319,166 @@
     }
 
     // ── Settings ──────────────────────────────────────────────────────────────
+    // Models fetched from a provider during this page visit, per provider.
+    const loadedModels = {};
+
     function fillSettings(p) {
       const prov = PROVIDERS[p];
       const isDemo = p === 'demo';
       $('modelGroup').hidden = isDemo;
-      $('modelHint').hidden = isDemo;
       $('keyGroup').hidden = isDemo;
       $('rememberRow').hidden = isDemo;
       $('endpointGroup').hidden = p !== 'custom';
       $('apiKeyInput').value = keys[p] || '';
       $('apiKeyInput').placeholder = prov.keyPlaceholder;
-      $('modelInput').value = modelFor(p);
-      $('modelSuggestions').innerHTML = prov.models.map(m => `<option value="${escapeHtml(m)}"></option>`).join('');
       if (p === 'custom') $('endpointInput').value = cfg.customEndpoint;
       $('rememberKeys').checked = !!cfg.rememberKeys;
+      $('testBtn').textContent = isDemo ? 'Check demo' : 'Test connection';
+      setTestResult('');
+      renderModelOptions(p, modelFor(p));
+      setModelHint(p);
       renderPrivacyNote(p);
+    }
+
+    function renderModelOptions(p, selected) {
+      const prov = PROVIDERS[p];
+      const select = $('modelSelect');
+      const curatedIds = new Set(prov.models.map(x => x.id));
+      const extra = (loadedModels[p] || []).filter(x => !curatedIds.has(x.id));
+      let html = '';
+      if (prov.models.length) {
+        html += `<optgroup label="Suggested">${prov.models.map((x, i) =>
+          `<option value="${escapeHtml(x.id)}">${escapeHtml(x.label)}${i === 0 ? ' (default)' : ''}</option>`).join('')}</optgroup>`;
+      }
+      if (extra.length) {
+        html += `<optgroup label="From your account (${extra.length})">${extra.map(x =>
+          `<option value="${escapeHtml(x.id)}">${escapeHtml(x.label && x.label !== x.id ? `${x.label} · ${x.id}` : x.id)}</option>`).join('')}</optgroup>`;
+      }
+      html += `<option value="${CUSTOM}">Custom model ID…</option>`;
+      select.innerHTML = html;
+
+      const known = [...select.options].some(o => o.value === selected && o.value !== CUSTOM);
+      select.value = selected && known ? selected : CUSTOM;
+      $('modelInput').value = known ? '' : (selected || '');
+      $('modelInput').hidden = select.value !== CUSTOM;
+      $('loadModelsBtn').hidden = !prov.modelsUrl && p !== 'custom';
+      $('loadModelsBtn').textContent = 'Load models from your account';
+    }
+
+    function setModelHint(p, text) {
+      if (text != null) { $('modelHint').textContent = text; return; }
+      $('modelHint').textContent = $('modelSelect').value === CUSTOM
+        ? 'Type the exact model ID your provider uses. Use "Test connection" to check it.'
+        : '';
+    }
+
+    function selectedModel() {
+      return $('modelSelect').value === CUSTOM ? $('modelInput').value.trim() : $('modelSelect').value;
+    }
+
+    // Settings exactly as they are in the form right now (may be unsaved).
+    function formSettings() {
+      const provider = $('providerSelect').value;
+      return {
+        provider,
+        key: $('apiKeyInput').value.trim(),
+        model: provider === 'demo' ? '' : selectedModel(),
+        endpoint: provider === 'custom' ? $('endpointInput').value.trim() : PROVIDERS[provider].endpoint,
+      };
+    }
+
+    // Settings as saved, used for real replies.
+    function savedSettings() {
+      const p = cfg.provider;
+      return { provider: p, key: keys[p] || '', model: modelFor(p), endpoint: p === 'custom' ? cfg.customEndpoint : PROVIDERS[p].endpoint };
+    }
+
+    const NON_CHAT = /(embed|tts|whisper|dall-e|image|imagen|veo|audio|realtime|transcri|moderation|rerank|guard|speech|voice|video|imagine|aqa|bison|gecko|computer-use|search-preview|:batch$)/i;
+
+    async function fetchModelList(s) {
+      const prov = PROVIDERS[s.provider];
+      let url = prov.modelsUrl;
+      if (s.provider === 'custom') {
+        if (!s.endpoint) throw new Error('Add the endpoint URL first.');
+        url = s.endpoint.replace(/\/chat\/completions\/?$/, '/models');
+      }
+      const needsKey = prov.listNeedsKey !== false && s.provider !== 'custom';
+      if (needsKey && !s.key) throw new Error(`Paste your ${prov.label} key first.`);
+
+      const headers = {};
+      if (prov.format === 'anthropic') Object.assign(headers, { 'x-api-key': s.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' });
+      else if (prov.format === 'gemini') headers['x-goog-api-key'] = s.key;
+      else if (s.key) headers.Authorization = `Bearer ${s.key}`;
+
+      let res;
+      try { res = await fetch(url, { headers }); }
+      catch { throw new Error(`${prov.host} doesn't allow listing models from a browser. Pick a suggestion or type a custom ID.`); }
+      if (!res.ok) throw await friendlyError(res, s);
+      const data = await res.json();
+
+      let list;
+      if (prov.format === 'gemini') {
+        list = (data.models || [])
+          .filter(x => (x.supportedGenerationMethods || []).includes('generateContent'))
+          .map(x => ({ id: x.name.replace(/^models\//, ''), label: x.displayName }));
+      } else {
+        list = (Array.isArray(data) ? data : data.data || []).map(x => ({ id: x.id, label: x.display_name || x.name || x.id }));
+      }
+      return list
+        .filter(x => x.id && !NON_CHAT.test(x.id))
+        .sort((a, b) => a.id.localeCompare(b.id));
+    }
+
+    async function loadModels() {
+      const s = formSettings();
+      const btn = $('loadModelsBtn');
+      const keep = selectedModel();
+      btn.disabled = true;
+      btn.textContent = 'Loading…';
+      try {
+        const list = await fetchModelList(s);
+        loadedModels[s.provider] = list;
+        renderModelOptions(s.provider, keep);
+        setModelHint(s.provider, list.length
+          ? `Loaded ${list.length} chat model${list.length === 1 ? '' : 's'} from ${PROVIDERS[s.provider].label === 'AI' ? 'your endpoint' : PROVIDERS[s.provider].host}.`
+          : 'Your account returned no chat models. Pick a suggestion or type a custom ID.');
+      } catch (err) {
+        setModelHint(s.provider, err.message);
+      } finally {
+        btn.disabled = false;
+        if (btn.textContent === 'Loading…') btn.textContent = 'Load models from your account';
+      }
+    }
+
+    function setTestResult(text, state) {
+      const el = $('testResult');
+      el.textContent = text;
+      el.className = 'test-result' + (state ? ' ' + state : '');
+    }
+
+    async function testConnection() {
+      const s = formSettings();
+      const btn = $('testBtn');
+      btn.disabled = true;
+      setTestResult('Checking…');
+      try {
+        if (s.provider === 'demo') {
+          await checkDemo();
+          if (demoEnabled) setTestResult('✓ The free demo is available.', 'ok');
+          else setTestResult("The free demo isn't available on this copy of the app. Pick a provider and add your own key.", 'bad');
+          return;
+        }
+        let reply = '';
+        const started = performance.now();
+        await generate('thought', 'Testing the connection. Reply with one short, calm sentence.', c => { reply += c; }, s);
+        const secs = ((performance.now() - started) / 1000).toFixed(1);
+        if (!reply.trim()) throw new Error('Connected, but the model sent back an empty reply.');
+        setTestResult(`✓ ${s.model} replied in ${secs}s. Remember to Save.`, 'ok');
+      } catch (err) {
+        setTestResult(err.message, 'bad');
+      } finally {
+        btn.disabled = false;
+      }
     }
 
     function renderPrivacyNote(p) {
@@ -1248,7 +1505,12 @@
     function saveSettings() {
       const p     = $('providerSelect').value;
       const key   = $('apiKeyInput').value.trim();
-      const model = $('modelInput').value.trim();
+      const model = selectedModel();
+      if (p !== 'demo' && !model) {
+        setModelHint(p, 'Type a model ID, or pick one from the list.');
+        $('modelInput').focus();
+        return;
+      }
 
       cfg.provider = p;
       cfg.rememberKeys = $('rememberKeys').checked;
@@ -1301,6 +1563,16 @@
     $('privacyLink').addEventListener('click', openSettings);
     $('themeBtn').addEventListener('click', toggleTheme);
     $('providerSelect').addEventListener('change', e => fillSettings(e.target.value));
+    $('modelSelect').addEventListener('change', () => {
+      const custom = $('modelSelect').value === CUSTOM;
+      $('modelInput').hidden = !custom;
+      if (custom) $('modelInput').focus();
+      setModelHint($('providerSelect').value);
+      setTestResult('');
+    });
+    $('apiKeyInput').addEventListener('input', () => setTestResult(''));
+    $('loadModelsBtn').addEventListener('click', loadModels);
+    $('testBtn').addEventListener('click', testConnection);
     $('saveSettingsBtn').addEventListener('click', saveSettings);
     $('forgetKeysBtn').addEventListener('click', forgetKeys);
     $('settingsModal').querySelector('[data-close]').addEventListener('click', closeSettings);
@@ -1309,10 +1581,34 @@
     }
 
     // ── LLM calls (all streamed) ──────────────────────────────────────────────
-    async function errorFrom(res) {
+    // Turns a failed response into a message a person can act on.
+    async function friendlyError(res, s) {
+      const prov = PROVIDERS[s.provider];
       const body = await res.json().catch(() => ({}));
-      const msg = body.error?.message || (typeof body.error === 'string' ? body.error : '') || body.message;
-      return new Error(msg || `Error ${res.status}`);
+      const raw = body.error?.message || (typeof body.error === 'string' ? body.error : '') || body.message || '';
+      if (s.provider === 'demo') return new Error(raw || `The demo returned an error (${res.status}).`);
+      const name = prov.label === 'AI' ? 'The endpoint' : prov.label;
+      const detail = raw ? ` (${raw.length > 160 ? raw.slice(0, 157) + '…' : raw})` : '';
+      let msg;
+      if (res.status === 401 || res.status === 403) msg = `${name} rejected your API key. Check it in AI settings.`;
+      else if (res.status === 404 || (res.status === 400 && /model/i.test(raw))) msg = `${name} doesn't recognise the model "${s.model}". Pick another model in AI settings.`;
+      else if (res.status === 402 || /credit|billing|quota|balance/i.test(raw)) msg = `${name} says your account is out of credit or quota.`;
+      else if (res.status === 429) msg = `${name} is rate limiting you. Wait a moment and try again.`;
+      else if (res.status >= 500) msg = `${name} is having trouble right now (${res.status}). Try again in a moment.`;
+      else msg = `${name} returned an error (${res.status}).`;
+      const err = new Error(msg + detail);
+      err.status = res.status;
+      return err;
+    }
+
+    async function request(url, init, s) {
+      try {
+        return await fetch(url, init);
+      } catch {
+        let host = url;
+        try { host = new URL(url, location.href).host; } catch { /* keep url */ }
+        throw new Error(`Couldn't reach ${host}. Check your connection${s.provider === 'custom' ? ', the endpoint URL, and that it allows requests from this site (CORS)' : ''}.`);
+      }
     }
 
     // Reads a server-sent-events body and hands each parsed `data:` JSON to onData.
@@ -1340,20 +1636,20 @@
 
     function isJSON(res) { return (res.headers.get('content-type') || '').includes('application/json'); }
 
-    async function generate(mode, text, onChunk) {
-      const p = cfg.provider;
-      const prov = PROVIDERS[p];
+    // Streams a reply. `s` defaults to the saved settings; Test connection passes the form's.
+    // Resolves to the model ID that actually answered.
+    async function generate(mode, text, onChunk, s = savedSettings()) {
+      const prov = PROVIDERS[s.provider];
       const system = PROMPTS[mode];
 
       if (prov.format === 'demo') return streamDemo(mode, text, onChunk);
 
-      const key = keys[p];
-      if (!key && p !== 'custom') throw new Error(`No ${prov.label} key yet. Open AI settings to add one, or switch to the free demo.`);
-      const model = modelFor(p);
-      if (!model) throw new Error('No model set. Open AI settings to add one.');
+      const { key, model } = s;
+      if (!key && s.provider !== 'custom') throw new Error(`No ${prov.label} key yet. Open AI settings to add one, or switch to the free demo.`);
+      if (!model) throw new Error('No model chosen. Open AI settings to pick one.');
 
       if (prov.format === 'anthropic') {
-        const res = await fetch('https://api.anthropic.com/v1/messages', {
+        const res = await request('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1362,18 +1658,20 @@
             'anthropic-dangerous-direct-browser-access': 'true',
           },
           body: JSON.stringify({ model, max_tokens: MAX_TOKENS, system, stream: true, messages: [{ role: 'user', content: text }] }),
-        });
-        if (!res.ok) throw await errorFrom(res);
+        }, s);
+        if (!res.ok) throw await friendlyError(res, s);
+        let used = model;
         await readSSE(res, d => {
+          if (d.type === 'message_start' && d.message?.model) used = d.message.model;
           if (d.type === 'content_block_delta' && d.delta?.type === 'text_delta') onChunk(d.delta.text);
-          if (d.type === 'error') throw new Error(d.error?.message || 'Stream error');
+          if (d.type === 'error') throw new Error(d.error?.message || 'The stream was interrupted.');
         });
-        return;
+        return used;
       }
 
       if (prov.format === 'gemini') {
         // Key goes in a header, never in the URL (URLs end up in logs and history).
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`, {
+        const res = await request(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
           body: JSON.stringify({
@@ -1381,20 +1679,20 @@
             contents: [{ role: 'user', parts: [{ text }] }],
             generationConfig: { maxOutputTokens: MAX_TOKENS },
           }),
-        });
-        if (!res.ok) throw await errorFrom(res);
+        }, s);
+        if (!res.ok) throw await friendlyError(res, s);
         await readSSE(res, d => {
           for (const part of d.candidates?.[0]?.content?.parts || []) if (part.text && !part.thought) onChunk(part.text);
         });
-        return;
+        return model;
       }
 
       // OpenAI-compatible
-      const endpoint = p === 'custom' ? cfg.customEndpoint : prov.endpoint;
+      const endpoint = s.endpoint;
       if (!endpoint) throw new Error('No endpoint URL set. Open AI settings to add one.');
       const headers = { 'Content-Type': 'application/json' };
       if (key) headers.Authorization = `Bearer ${key}`;
-      const res = await fetch(endpoint, {
+      const res = await request(endpoint, {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -1403,28 +1701,32 @@
           [prov.tokenParam || 'max_tokens']: MAX_TOKENS,
           messages: [{ role: 'system', content: system }, { role: 'user', content: text }],
         }),
-      });
-      if (!res.ok) throw await errorFrom(res);
+      }, s);
+      if (!res.ok) throw await friendlyError(res, s);
       if (isJSON(res)) { // endpoint ignored stream: true
         const d = await res.json();
         onChunk(d.choices?.[0]?.message?.content || '');
-        return;
+        return d.model || model;
       }
+      let used = model;
       await readSSE(res, d => {
-        if (d.error) throw new Error(d.error.message || 'Stream error');
+        if (d.error) throw new Error(d.error.message || 'The stream was interrupted.');
+        if (d.model) used = d.model;
         const piece = d.choices?.[0]?.delta?.content;
         if (piece) onChunk(piece);
       });
+      return used;
     }
 
     async function streamDemo(mode, text, onChunk) {
       if (demoEnabled === false) throw new Error("The free demo isn't available here. Open AI settings and add your own key.");
-      const res = await fetch('/api/reflect', {
+      const s = { provider: 'demo' };
+      const res = await request('/api/reflect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode, text }),
-      });
-      if (!res.ok) throw await errorFrom(res);
+      }, s);
+      if (!res.ok) throw await friendlyError(res, s);
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       for (;;) {
@@ -1432,6 +1734,7 @@
         if (done) break;
         onChunk(decoder.decode(value, { stream: true }));
       }
+      return res.headers.get('X-Demo-Model') || 'gemini';
     }
 
     async function checkDemo() {
@@ -1456,8 +1759,12 @@
       errorBox.style.display = 'none';
       $('saveAiBtn').hidden = true;
 
-      const label = PROVIDERS[cfg.provider].label.toLowerCase() + (cfg.provider === 'demo' ? ' · free demo' : '');
-      $('responseLabel').textContent = labelPrefix ? `${labelPrefix} · ${label}` : label;
+      const isDemo = cfg.provider === 'demo';
+      const setLabel = name => {
+        const label = name + (isDemo ? ' · free demo' : '');
+        $('responseLabel').textContent = labelPrefix ? `${labelPrefix} · ${label}` : label;
+      };
+      setLabel(isDemo ? 'gemini' : modelFor(cfg.provider) || PROVIDERS[cfg.provider].label.toLowerCase());
       responseText.textContent = '';
       responseText.classList.add('streaming');
       responseBox.setAttribute('aria-busy', 'true');
@@ -1466,7 +1773,8 @@
 
       let full = '';
       try {
-        await generate(mode, text, chunk => { full += chunk; responseText.textContent = full; });
+        const used = await generate(mode, text, chunk => { full += chunk; responseText.textContent = full; });
+        if (used) setLabel(used);
         full = full.trim();
         if (!full) throw new Error('The AI sent back an empty reply. Try again?');
         responseText.textContent = full;
@@ -1910,6 +2218,11 @@
     renderNotes();
     updateModeChip();
     checkDemo();
+
+    // Installable + offline (needs https or localhost).
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+    }
   </script>
 </body>
 </html>

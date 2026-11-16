@@ -1,5 +1,7 @@
 # Late Night Thoughts 🌙
 
+[![CI](https://github.com/Schmuchzyy/LateNightThoughts/actions/workflows/ci.yml/badge.svg)](https://github.com/Schmuchzyy/LateNightThoughts/actions/workflows/ci.yml)
+
 A quiet place to think out loud. Write down what's keeping you up, and a calm, grounded AI friend writes back in a few honest sentences. No toxic positivity, no hype. Save the thoughts worth keeping as tagged notes, and once a week ask it to reflect on what you wrote.
 
 **Live demo:** _coming with the first deploy_ · works on phone and desktop, no sign-up and no API key needed.
@@ -15,7 +17,10 @@ A quiet place to think out loud. Write down what's keeping you up, and a calm, g
 ## What it does
 
 - **Instant reply, no key needed.** The free demo mode sends your thought through a small serverless function to Google Gemini and streams the reply back as it's written.
-- **Bring your own key** for 11 providers: Anthropic, OpenAI, Google, xAI, DeepSeek, Groq, Mistral, Perplexity, Together, OpenRouter, or any OpenAI-compatible endpoint (including a local model). The model field takes any model ID, with suggestions for each provider.
+- **Bring your own key** for 11 providers: Anthropic, OpenAI, Google, xAI, DeepSeek, Groq, Mistral, Perplexity, Together, OpenRouter, or any OpenAI-compatible endpoint (including a local model).
+- **A model picker that doesn't go stale:** each provider gets a short list of current models with plain labels ("fastest, cheapest", "most capable"). **Load models from your account** fetches the live list from the provider, and **Custom model ID…** takes any model.
+- **Test connection** checks your key and model with a tiny request before you save. When something fails, errors say what to do next: wrong key, unknown model, out of credit or rate limited. Each reply is labelled with the model that actually wrote it.
+- **Installable and works offline:** add it to your home screen like an app. Your notes open and save without a connection; only the AI reply needs one.
 - **Notes that stay useful:** tags, filter by tag, live search with highlighting, inline editing, and undo after delete.
 - **Reflect on my week:** a gentle summary of the notes you saved in the last 7 days, with one question to sit with.
 - **Export and import** as Markdown (readable, and round-trips back in) or JSON.
@@ -37,7 +42,9 @@ The site owner's Gemini key is a server-side environment variable. It is never s
 
 - `index.html`: the whole app. Plain HTML, CSS and JavaScript, with no framework and no build step.
 - `api/reflect.js`: a Vercel serverless function (Node, no dependencies). `GET` reports whether the demo is available. `POST {mode, text}` streams a plain-text reply from Gemini's `streamGenerateContent` endpoint and falls back through a list of models.
+- `sw.js` and `manifest.webmanifest`: the installable, offline-first PWA. Pages load from the network first and fall back to the cache; AI calls are never cached.
 - `vercel.json`: security headers (CSP, no framing, no referrer).
+- `tests/`: Node's built-in test runner, no dependencies. Covers the demo function (streaming, model fallback, rate limits, input checks, origin check) plus checks that the app script parses, every input has a label, and no API keys are committed. GitHub Actions runs them on Node 20 and 22 for every push and PR.
 - `dev-server.mjs`: a tiny local server that serves the page and runs the function the same way Vercel does.
 
 Every provider is called with streaming on, and the reply renders as it arrives. The Gemini key goes in the `x-goog-api-key` header, never in the URL.
@@ -62,6 +69,12 @@ npm run dev
 ```
 
 You can also open `index.html` straight from disk and use your own key. Demo mode needs the server.
+
+Run the tests:
+
+```bash
+npm test
+```
 
 ## Deploy your own
 

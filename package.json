@@ -5,9 +5,10 @@
   "description": "A quiet place to think out loud: notes plus a calm AI reply.",
   "scripts": {
     "dev": "node dev-server.mjs",
-    "dev:mock": "node dev-server.mjs --mock"
+    "dev:mock": "node dev-server.mjs --mock",
+    "test": "node --test"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20.11"
   }
 }

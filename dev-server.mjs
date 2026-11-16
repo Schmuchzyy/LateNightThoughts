@@ -4,6 +4,7 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
+import { extname } from 'node:path';
 
 process.chdir(import.meta.dirname);
 
@@ -17,6 +18,11 @@ if (process.argv.includes('--mock')) process.env.DEMO_MOCK = '1';
 
 const api = await import('./api/reflect.js');
 const PORT = Number(process.env.PORT) || 3000;
+const PUBLIC = new Set(['index.html', 'sw.js', 'manifest.webmanifest']);
+const TYPES = {
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.webmanifest': 'application/manifest+json',
+  '.svg': 'image/svg+xml', '.png': 'image/png',
+};
 
 createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -36,10 +42,14 @@ createServer(async (req, res) => {
     res.end();
     return;
   }
-  if (url.pathname === '/' || url.pathname === '/index.html') {
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(await readFile('index.html'));
-    return;
+  const file = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
+  if (PUBLIC.has(file) || /^icons\/[\w.-]+$/.test(file)) {
+    try {
+      const body = await readFile(file);
+      res.writeHead(200, { 'Content-Type': TYPES[extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
+      res.end(body);
+      return;
+    } catch { /* fall through to 404 */ }
   }
   res.writeHead(404).end('Not found');
 }).listen(PORT, () => console.log(`Late Night Thoughts on http://localhost:${PORT}${process.env.DEMO_MOCK === '1' ? ' (mock demo)' : ''}`));

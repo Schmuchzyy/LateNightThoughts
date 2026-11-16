@@ -47,6 +47,9 @@ function rateLimit(ip) {
   return { ok: true };
 }
 
+// Lets the test suite start each case with a clean slate.
+export function _resetRateLimit() { hits.clear(); }
+
 function json(status, body, extraHeaders = {}) {
   return new Response(JSON.stringify(body), {
     status,
