@@ -3,9 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="A simple AI-powered note-taking web app for late night thoughts.">
+  <meta name="description" content="A quiet place to think out loud: jot down late night thoughts and get a calm, honest reply from an AI friend. Notes stay in your browser.">
+  <meta name="theme-color" content="#0d0d14" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f5f4f0" media="(prefers-color-scheme: light)">
   <title>Late Night Thoughts</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌙</text></svg>">
+  <meta property="og:title" content="Late Night Thoughts">
+  <meta property="og:description" content="A quiet place to think out loud. Write what's keeping you up and a calm AI friend writes back. Try it free, no sign-up.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
@@ -17,7 +26,7 @@
       --bg-alt:     #eceae4;
       --card:       #ffffff;
       --text:       #1a1a2e;
-      --text-2:     #6b6b80;
+      --text-2:     #626277;
       --border:     #e0dfe8;
       --accent:     #5856d6;
       --accent-rgb: 88, 86, 214;
@@ -30,7 +39,7 @@
       --bg-alt:     #13131f;
       --card:       #161622;
       --text:       #e4e4f0;
-      --text-2:     #6868a0;
+      --text-2:     #8a8ab8;
       --border:     #252538;
       --accent:     #7c6af7;
       --accent-rgb: 124, 106, 247;
@@ -49,6 +58,23 @@
     .container {
       max-width: 640px;
       margin: 0 auto;
+    }
+
+    [hidden] { display: none !important; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
     }
 
     /* ── Header ── */
@@ -81,6 +107,7 @@
     .icon-btn {
       width: 36px;
       height: 36px;
+      padding: 0;
       border-radius: 10px;
       border: 1px solid var(--border);
       background: var(--card);
@@ -119,6 +146,7 @@
     /* ── Form elements ── */
     input[type="password"],
     input[type="text"],
+    input[type="search"],
     textarea,
     select {
       font-family: inherit;
@@ -182,7 +210,8 @@
       transform: translateY(0);
     }
 
-    .btn-primary:disabled {
+    .btn-primary:disabled,
+    .btn-secondary:disabled {
       opacity: 0.45;
       cursor: not-allowed;
     }
@@ -195,7 +224,7 @@
       padding: 8px 14px;
     }
 
-    .btn-secondary:hover {
+    .btn-secondary:hover:not(:disabled) {
       background: rgba(var(--accent-rgb), 0.07);
       border-color: var(--accent);
     }
@@ -244,7 +273,41 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
     }
+
+    .thought-footer-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .mode-chip {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-2);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 5px 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mode-chip:hover { color: var(--text); border-color: rgba(var(--accent-rgb), 0.5); }
+
+    .mode-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #22c55e;
+      flex-shrink: 0;
+    }
+
+    .mode-dot.off { background: #f59e0b; }
 
     .send-hint {
       font-size: 11px;
@@ -282,10 +345,51 @@
       font-size: 15px;
       line-height: 1.8;
       color: var(--text);
+      white-space: pre-wrap;
+    }
+
+    .response-text.streaming::after {
+      content: '';
+      display: inline-block;
+      width: 7px;
+      height: 15px;
+      margin-left: 2px;
+      vertical-align: -2px;
+      background: var(--accent);
+      border-radius: 2px;
+      animation: blink 1s steps(2, start) infinite;
     }
 
     .response-actions {
       margin-top: 14px;
+    }
+
+    .setup-hint {
+      margin-top: 16px;
+      padding: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-2);
+    }
+
+    .setup-hint strong { color: var(--text); font-weight: 600; }
+
+    .setup-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .field-hint a, .setup-hint a { color: var(--accent); font-weight: 500; }
+
+    .example-thought {
+      font-style: italic;
+      color: var(--text-2);
+      margin-bottom: 10px;
     }
 
     .error-box {
@@ -306,11 +410,21 @@
       border-color: rgba(248, 113, 113, 0.2);
     }
 
+    .error-box button {
+      margin-left: 6px;
+      padding: 0;
+      background: none;
+      color: inherit;
+      font-size: inherit;
+      text-decoration: underline;
+    }
+
     /* ── Notes ── */
     .notes-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 10px;
       margin-bottom: 16px;
     }
 
@@ -320,6 +434,14 @@
       letter-spacing: 1px;
       text-transform: uppercase;
       color: var(--text-2);
+      margin: 0;
+    }
+
+    .notes-count {
+      font-weight: 500;
+      letter-spacing: 0;
+      text-transform: none;
+      margin-left: 6px;
     }
 
     #noteInput {
@@ -333,8 +455,39 @@
       margin-top: 10px;
     }
 
+    .filter-bar {
+      margin-top: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chip {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 100px;
+      background: var(--bg);
+      color: var(--text-2);
+      border: 1px solid var(--border);
+    }
+
+    .chip:hover { color: var(--text); border-color: rgba(var(--accent-rgb), 0.5); }
+
+    .chip[aria-pressed="true"] {
+      background: rgba(var(--accent-rgb), 0.12);
+      color: var(--accent);
+      border-color: rgba(var(--accent-rgb), 0.55);
+    }
+
     .notes-list {
-      margin-top: 20px;
+      margin-top: 16px;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -386,13 +539,21 @@
       word-break: break-word;
     }
 
+    .note-content mark {
+      background: rgba(var(--accent-rgb), 0.22);
+      color: inherit;
+      border-radius: 3px;
+      padding: 0 1px;
+    }
+
     .note-footer {
       margin-top: 10px;
       display: flex;
       justify-content: flex-end;
+      gap: 4px;
     }
 
-    .delete-btn {
+    .note-btn {
       font-family: inherit;
       font-size: 12px;
       color: var(--text-2);
@@ -404,9 +565,28 @@
       transition: color 0.15s, background 0.15s;
     }
 
-    .delete-btn:hover {
+    .note-btn:hover {
+      color: var(--text);
+      background: var(--bg-alt);
+    }
+
+    .note-btn.danger:hover {
       color: #b91c1c;
       background: rgba(185, 28, 28, 0.07);
+    }
+
+    .note-edit textarea {
+      min-height: 90px;
+      background: var(--card);
+    }
+
+    .note-edit .chips { margin-top: 10px; }
+
+    .note-edit-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 10px;
     }
 
     .no-notes {
@@ -417,7 +597,33 @@
       padding: 24px;
     }
 
-    /* ── Settings Modal ── */
+    .notes-tools {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2px;
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .privacy-line {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-2);
+      margin-top: 4px;
+      line-height: 1.6;
+    }
+
+    .privacy-line button {
+      padding: 0;
+      background: none;
+      color: var(--accent);
+      font-size: inherit;
+      font-weight: 500;
+    }
+
+    /* ── Dialogs ── */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -429,6 +635,7 @@
       align-items: flex-start;
       justify-content: center;
       padding: 60px 16px 20px;
+      overflow-y: auto;
     }
 
     .modal-overlay.open { display: flex; }
@@ -459,6 +666,7 @@
     .modal-close {
       width: 30px;
       height: 30px;
+      padding: 0;
       border-radius: 8px;
       border: none;
       background: var(--bg);
@@ -492,6 +700,7 @@
       flex-direction: column;
       gap: 5px;
       flex: 1;
+      min-width: 0;
     }
 
     .field-label {
@@ -501,38 +710,110 @@
       letter-spacing: 0.2px;
     }
 
+    .field-hint {
+      font-size: 11px;
+      color: var(--text-2);
+      line-height: 1.5;
+    }
+
+    .field-hint:empty { display: none; }
+
+    .label-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .link-btn {
+      padding: 0;
+      background: none;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .link-btn:hover { text-decoration: underline; }
+    .link-btn:disabled { color: var(--text-2); cursor: default; text-decoration: none; }
+
+    #modelInput { margin-top: 6px; }
+
+    .test-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .test-result {
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text-2);
+      flex: 1;
+      min-width: 0;
+    }
+
+    .test-result.ok  { color: #16a34a; }
+    .test-result.bad { color: #b91c1c; }
+    [data-theme="dark"] .test-result.ok  { color: #4ade80; }
+    [data-theme="dark"] .test-result.bad { color: #f87171; }
+
+    optgroup { font-weight: 600; }
+
+    .check-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      font-size: 13px;
+      line-height: 1.45;
+      cursor: pointer;
+    }
+
+    .check-row input {
+      margin-top: 3px;
+      width: 15px;
+      height: 15px;
+      accent-color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .privacy-note {
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text-2);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 13px;
+    }
+
+    .privacy-note strong { color: var(--text); font-weight: 600; }
+
     .settings-footer {
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
       align-items: center;
       gap: 12px;
       margin-top: 4px;
     }
 
+    .settings-footer-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
     .saved-msg {
       font-size: 12px;
-      color: #22c55e;
+      color: #16a34a;
       opacity: 0;
       transition: opacity 0.25s;
     }
 
     .saved-msg.visible { opacity: 1; }
 
-    /* ── Tag Modal ── */
-    .tag-modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.3);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .tag-modal-overlay.open { display: flex; }
+    /* ── Tag dialog ── */
+    #tagModal { z-index: 200; align-items: center; padding: 20px; }
 
     .tag-modal {
       background: var(--card);
@@ -545,7 +826,7 @@
       border: 1px solid var(--border);
     }
 
-    .tag-modal h3 {
+    .tag-modal h2 {
       font-size: 16px;
       font-weight: 600;
       margin-bottom: 4px;
@@ -568,18 +849,16 @@
       padding: 11px 8px;
       border-radius: 10px;
       border: 2px solid transparent;
-      cursor: pointer;
       text-align: center;
       font-size: 12px;
       font-weight: 600;
       letter-spacing: 0.4px;
       text-transform: uppercase;
       transition: all 0.15s;
-      user-select: none;
     }
 
     .tag-option:hover { filter: brightness(0.94); }
-    .tag-option.selected { border-color: var(--text); box-shadow: 0 0 0 1px var(--text); }
+    .tag-option[aria-pressed="true"] { border-color: var(--text); box-shadow: 0 0 0 1px var(--text); }
 
     .tag-option-idea     { background: #dbeafe; color: #1d4ed8; }
     .tag-option-personal { background: #fce7f3; color: #be185d; }
@@ -592,6 +871,44 @@
       justify-content: flex-end;
     }
 
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translate(-50%, 20px);
+      background: var(--text);
+      color: var(--bg);
+      border-radius: 12px;
+      padding: 10px 10px 10px 16px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 300;
+      max-width: calc(100vw - 32px);
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translate(-50%, 0);
+      pointer-events: auto;
+    }
+
+    .toast button {
+      background: rgba(var(--accent-rgb), 0.9);
+      color: #fff;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+
+    .toast button[hidden] { display: none; }
+
     /* ── Animations ── */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(6px); }
@@ -603,6 +920,12 @@
       to   { opacity: 1; transform: scale(1) translateY(0); }
     }
 
+    @keyframes blink { to { visibility: hidden; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+
     /* ── Responsive ── */
     @media (max-width: 480px) {
       .header-left h1 { font-size: 19px; }
@@ -610,11 +933,13 @@
       .send-hint { display: none; }
       .field-row { flex-direction: column; }
       .modal-overlay { padding: 20px 16px; }
+      .settings-footer { flex-direction: column-reverse; align-items: stretch; }
+      .settings-footer-right { justify-content: flex-end; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="container" id="app">
 
     <header>
       <div class="header-left">
@@ -622,8 +947,8 @@
         <p>a quiet place to think out loud</p>
       </div>
       <div class="header-actions">
-        <button class="icon-btn" id="settingsBtn" onclick="openSettings()" title="Settings" aria-label="Settings">
-          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <button class="icon-btn" id="settingsBtn" type="button" title="AI settings" aria-label="AI settings" aria-haspopup="dialog">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <line x1="10" y1="1.5" x2="10" y2="4"/>
             <circle cx="10" cy="1.5" r="0.8" fill="currentColor" stroke="none"/>
             <rect x="3" y="4" width="14" height="12" rx="2.5"/>
@@ -632,160 +957,341 @@
             <path d="M7 13h6"/>
           </svg>
         </button>
-        <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme"></button>
+        <button class="icon-btn" id="themeBtn" type="button" title="Toggle theme" aria-label="Switch to dark theme"></button>
       </div>
     </header>
 
-    <!-- Main thought input -->
-    <div class="card">
-      <textarea id="thoughtInput" placeholder="What's on your mind…" rows="5"></textarea>
-      <div class="thought-divider"></div>
-      <div class="thought-footer">
-        <span class="send-hint"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> to send</span>
-        <button class="btn-primary" id="sendBtn" onclick="sendThought()">Send it</button>
-      </div>
-      <div class="error-box" id="errorBox"></div>
-      <div class="response-box" id="responseBox">
-        <div class="response-label" id="responseLabel">ai</div>
-        <div class="response-text" id="responseText"></div>
-        <div class="response-actions">
-          <button class="btn-secondary" onclick="triggerSaveAiNote()">Save as note</button>
+    <main>
+      <!-- Main thought input -->
+      <section class="card" aria-label="Share a thought">
+        <label for="thoughtInput" class="sr-only">What's on your mind</label>
+        <textarea id="thoughtInput" placeholder="What's on your mind…" rows="5"></textarea>
+        <div class="thought-divider"></div>
+        <div class="thought-footer">
+          <div class="thought-footer-left">
+            <button class="mode-chip" id="modeChip" type="button" aria-haspopup="dialog"><span class="mode-dot" id="modeDot" aria-hidden="true"></span><span id="modeText">AI settings</span></button>
+            <span class="send-hint"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> to send</span>
+          </div>
+          <button class="btn-primary" id="sendBtn" type="button">Send it</button>
         </div>
-      </div>
-    </div>
+        <div class="setup-hint" id="setupHint" hidden>
+          <p>Replies come from an AI model using <strong>your own API key</strong>, which stays in this browser. Google Gemini and Groq keys are free.</p>
+          <div class="setup-actions">
+            <button type="button" class="btn-secondary" id="addKeyBtn" aria-haspopup="dialog">Add a key</button>
+            <button type="button" class="btn-ghost" id="exampleBtn">See an example</button>
+          </div>
+        </div>
+        <div class="error-box" id="errorBox" role="alert"></div>
+        <div class="response-box" id="responseBox" aria-live="polite" aria-busy="false">
+          <div class="response-label" id="responseLabel">ai</div>
+          <div class="response-text" id="responseText"></div>
+          <div class="response-actions">
+            <button class="btn-secondary" id="saveAiBtn" type="button" aria-haspopup="dialog">Save as note</button>
+          </div>
+        </div>
+      </section>
 
-    <!-- Notes -->
-    <div class="card">
-      <div class="notes-header">
-        <span class="notes-title">Notes</span>
-      </div>
-      <textarea id="noteInput" placeholder="Write a note…"></textarea>
-      <div class="note-add-row">
-        <button class="btn-primary" onclick="triggerSaveManualNote()">Add note</button>
-      </div>
-      <div class="notes-list" id="notesList"></div>
-    </div>
+      <!-- Notes -->
+      <section class="card" aria-labelledby="notesTitle">
+        <div class="notes-header">
+          <h2 class="notes-title" id="notesTitle">Notes<span class="notes-count" id="notesCount"></span></h2>
+          <button class="btn-secondary" id="weekBtn" type="button" title="Get a gentle reflection on the notes you saved in the last 7 days">Reflect on my week</button>
+        </div>
+        <label for="noteInput" class="sr-only">Write a note</label>
+        <textarea id="noteInput" placeholder="Write a note…"></textarea>
+        <div class="note-add-row">
+          <button class="btn-primary" id="addNoteBtn" type="button" aria-haspopup="dialog">Add note</button>
+        </div>
+
+        <div class="filter-bar">
+          <label for="searchInput" class="sr-only">Search notes</label>
+          <input type="search" id="searchInput" placeholder="Search notes…" autocomplete="off">
+          <div class="chips" role="group" aria-label="Filter notes by tag" id="filterChips">
+            <button type="button" class="chip" data-filter="all" aria-pressed="true">All</button>
+            <button type="button" class="chip" data-filter="idea" aria-pressed="false">Idea</button>
+            <button type="button" class="chip" data-filter="personal" aria-pressed="false">Personal</button>
+            <button type="button" class="chip" data-filter="random" aria-pressed="false">Random</button>
+            <button type="button" class="chip" data-filter="reminder" aria-pressed="false">Reminder</button>
+            <button type="button" class="chip" data-filter="untagged" aria-pressed="false">Untagged</button>
+          </div>
+        </div>
+
+        <div class="notes-list" id="notesList"></div>
+
+        <div class="notes-tools">
+          <button class="btn-ghost" id="exportMdBtn" type="button">Export Markdown</button>
+          <button class="btn-ghost" id="exportJsonBtn" type="button">Export JSON</button>
+          <button class="btn-ghost" id="importBtn" type="button">Import</button>
+          <input type="file" id="importFile" accept=".json,.md,.markdown,.txt,application/json,text/markdown,text/plain" hidden>
+        </div>
+        <p class="privacy-line">Your notes live only in this browser. <button type="button" id="privacyLink">How the AI reply works</button></p>
+      </section>
+    </main>
 
   </div>
 
-  <!-- Settings Modal -->
-  <div class="modal-overlay" id="settingsModal" onclick="handleSettingsOverlayClick(event)">
-    <div class="modal">
+  <!-- Settings dialog -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
       <div class="modal-header">
-        <span class="modal-title">Settings</span>
-        <button class="modal-close" onclick="closeSettings()" aria-label="Close">✕</button>
+        <h2 class="modal-title" id="settingsTitle">AI settings</h2>
+        <button class="modal-close" type="button" data-close aria-label="Close settings">✕</button>
       </div>
       <div class="settings-fields">
 
-        <div class="field-row">
-          <div class="field-group" style="flex: 1.4;">
-            <label class="field-label">Provider</label>
-            <select id="providerSelect" onchange="onProviderChange()">
+        <div class="field-group">
+          <label class="field-label" for="providerSelect">Provider</label>
+          <select id="providerSelect">
+            <optgroup label="No key needed">
+              <option value="demo">Free demo (Gemini, rate limited)</option>
+            </optgroup>
+            <optgroup label="Popular · your own key">
               <option value="anthropic">Anthropic (Claude)</option>
               <option value="openai">OpenAI (GPT)</option>
               <option value="gemini">Google (Gemini)</option>
+            </optgroup>
+            <optgroup label="More providers · your own key">
               <option value="xai">xAI (Grok)</option>
               <option value="deepseek">DeepSeek</option>
-              <option value="groq">Groq (Llama · fast)</option>
+              <option value="groq">Groq (very fast)</option>
               <option value="mistral">Mistral</option>
               <option value="perplexity">Perplexity</option>
               <option value="together">Together AI</option>
-              <option value="openrouter">OpenRouter (all models)</option>
-              <option value="custom">Custom (OpenAI-compatible)</option>
-            </select>
-          </div>
-          <div class="field-group">
-            <label class="field-label">Model</label>
-            <input type="text" id="modelInput" placeholder="model name">
-          </div>
+            </optgroup>
+            <optgroup label="Advanced">
+              <option value="openrouter">OpenRouter (hundreds of models)</option>
+              <option value="custom">Custom (OpenAI-compatible, e.g. a local model)</option>
+            </optgroup>
+          </select>
         </div>
 
-        <div class="field-group">
-          <label class="field-label">API Key</label>
-          <input type="password" id="apiKeyInput" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
+        <div class="field-group" id="endpointGroup" hidden>
+          <label class="field-label" for="endpointInput">Endpoint URL</label>
+          <input type="text" id="endpointInput" placeholder="http://localhost:11434/v1/chat/completions" spellcheck="false">
         </div>
 
-        <div class="field-group" id="endpointGroup" style="display:none;">
-          <label class="field-label">Endpoint URL</label>
-          <input type="text" id="endpointInput" placeholder="https://your-endpoint.com/v1/chat/completions">
+        <div class="field-group" id="keyGroup">
+          <label class="field-label" for="apiKeyInput">API key</label>
+          <input type="password" id="apiKeyInput" placeholder="sk-ant-…" autocomplete="off" spellcheck="false" aria-describedby="keyHint">
+          <p class="field-hint" id="keyHint"></p>
         </div>
+
+        <div class="field-group" id="modelGroup">
+          <div class="label-row">
+            <label class="field-label" for="modelSelect">Model</label>
+            <button type="button" class="link-btn" id="loadModelsBtn">Load models from your account</button>
+          </div>
+          <select id="modelSelect" aria-describedby="modelHint"></select>
+          <label for="modelInput" class="sr-only">Custom model ID</label>
+          <input type="text" id="modelInput" placeholder="exact model ID, e.g. my-model-v2" autocomplete="off" spellcheck="false" hidden>
+          <p class="field-hint" id="modelHint" aria-live="polite"></p>
+        </div>
+
+        <div class="test-row">
+          <button type="button" class="btn-secondary" id="testBtn">Test connection</button>
+          <span class="test-result" id="testResult" role="status" aria-live="polite"></span>
+        </div>
+
+        <label class="check-row" id="rememberRow" for="rememberKeys">
+          <input type="checkbox" id="rememberKeys">
+          <span>Remember my keys on this device<br><span class="field-hint">Off: keys are forgotten when you close this tab.</span></span>
+        </label>
+
+        <p class="privacy-note" id="privacyNote"></p>
 
         <div class="settings-footer">
-          <span class="saved-msg" id="savedMsg">saved ✓</span>
-          <button class="btn-primary" onclick="saveSettings()">Save</button>
+          <button class="btn-ghost" id="forgetKeysBtn" type="button">Forget all saved keys</button>
+          <div class="settings-footer-right">
+            <span class="saved-msg" id="savedMsg" role="status"></span>
+            <button class="btn-primary" id="saveSettingsBtn" type="button">Save</button>
+          </div>
         </div>
 
       </div>
     </div>
   </div>
 
-  <!-- Tag Modal -->
-  <div class="tag-modal-overlay" id="tagModal" onclick="handleTagOverlayClick(event)">
-    <div class="tag-modal">
-      <h3>Add a tag</h3>
-      <p>Optional — helps you find it later.</p>
-      <div class="tag-options">
-        <div class="tag-option tag-option-idea"     onclick="selectTag('idea')">idea</div>
-        <div class="tag-option tag-option-personal" onclick="selectTag('personal')">personal</div>
-        <div class="tag-option tag-option-random"   onclick="selectTag('random')">random</div>
-        <div class="tag-option tag-option-reminder" onclick="selectTag('reminder')">reminder</div>
+  <!-- Tag dialog -->
+  <div class="modal-overlay" id="tagModal">
+    <div class="tag-modal" role="dialog" aria-modal="true" aria-labelledby="tagModalTitle" aria-describedby="tagModalDesc">
+      <h2 id="tagModalTitle">Add a tag</h2>
+      <p id="tagModalDesc">Optional. Helps you find it later.</p>
+      <div class="tag-options" role="group" aria-label="Tag">
+        <button type="button" class="tag-option tag-option-idea"     data-tag="idea"     aria-pressed="false">idea</button>
+        <button type="button" class="tag-option tag-option-personal" data-tag="personal" aria-pressed="false">personal</button>
+        <button type="button" class="tag-option tag-option-random"   data-tag="random"   aria-pressed="false">random</button>
+        <button type="button" class="tag-option tag-option-reminder" data-tag="reminder" aria-pressed="false">reminder</button>
       </div>
       <div class="tag-modal-actions">
-        <button class="btn-ghost" onclick="confirmSave(null)">No tag</button>
-        <button class="btn-primary" onclick="confirmSave(currentTag)">Save note</button>
+        <button class="btn-ghost" type="button" id="noTagBtn">No tag</button>
+        <button class="btn-primary" type="button" id="confirmTagBtn">Save note</button>
       </div>
     </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <span id="toastText"></span>
+    <button type="button" id="toastAction" hidden>Undo</button>
   </div>
 
   <script>
     // ── Provider config ────────────────────────────────────────────────────────
+    // Model IDs checked against each provider's docs in November 2026. The model
+    // field accepts any ID, so newer models work without a code change.
+    // `models` is the curated list shown in the dropdown (first = default).
+    // `modelsUrl` is the provider's "list models" endpoint, used by "Load models from your account".
+    const m = (id, label) => ({ id, label });
     const PROVIDERS = {
-      anthropic:  { label: 'Claude',     endpoint: 'https://api.anthropic.com/v1/messages',                                        defaultModel: 'claude-sonnet-4-20250514',                keyPlaceholder: 'sk-ant-…',          format: 'anthropic' },
-      openai:     { label: 'GPT',        endpoint: 'https://api.openai.com/v1/chat/completions',                                    defaultModel: 'gpt-4o',                                  keyPlaceholder: 'sk-…',              format: 'openai'    },
-      gemini:     { label: 'Gemini',     endpoint: 'https://generativelanguage.googleapis.com/v1beta/models',                       defaultModel: 'gemini-2.0-flash',                        keyPlaceholder: 'AIza…',             format: 'gemini'    },
-      xai:        { label: 'Grok',       endpoint: 'https://api.x.ai/v1/chat/completions',                                          defaultModel: 'grok-2-latest',                           keyPlaceholder: 'xai-…',             format: 'openai'    },
-      deepseek:   { label: 'DeepSeek',   endpoint: 'https://api.deepseek.com/chat/completions',                                     defaultModel: 'deepseek-chat',                           keyPlaceholder: 'sk-…',              format: 'openai'    },
-      groq:       { label: 'Groq',       endpoint: 'https://api.groq.com/openai/v1/chat/completions',                               defaultModel: 'llama-3.3-70b-versatile',                 keyPlaceholder: 'gsk_…',             format: 'openai'    },
-      mistral:    { label: 'Mistral',    endpoint: 'https://api.mistral.ai/v1/chat/completions',                                    defaultModel: 'mistral-large-latest',                    keyPlaceholder: 'your-mistral-key',  format: 'openai'    },
-      perplexity: { label: 'Perplexity', endpoint: 'https://api.perplexity.ai/chat/completions',                                    defaultModel: 'sonar-pro',                               keyPlaceholder: 'pplx-…',            format: 'openai'    },
-      together:   { label: 'Together',   endpoint: 'https://api.together.xyz/v1/chat/completions',                                  defaultModel: 'meta-llama/Llama-3.3-70B-Instruct-Turbo', keyPlaceholder: 'your-together-key', format: 'openai'    },
-      openrouter: { label: 'OpenRouter', endpoint: 'https://openrouter.ai/api/v1/chat/completions',                                 defaultModel: 'openai/gpt-4o',                           keyPlaceholder: 'sk-or-…',           format: 'openai'    },
-      custom:     { label: 'AI',         endpoint: '',                                                                               defaultModel: '',                                        keyPlaceholder: 'your-api-key',      format: 'openai'    },
+      demo: { label: 'Gemini', host: 'this site', format: 'demo', keyPlaceholder: '', models: [] },
+      anthropic: {
+        label: 'Claude', host: 'api.anthropic.com', format: 'anthropic', keyPlaceholder: 'sk-ant-…',
+        modelsUrl: 'https://api.anthropic.com/v1/models?limit=100',
+        models: [m('claude-sonnet-5-5', 'Claude Sonnet 5.5 · balanced'), m('claude-haiku-5-5', 'Claude Haiku 5.5 · fastest, cheapest'), m('claude-opus-5-5', 'Claude Opus 5.5 · most capable')],
+      },
+      openai: {
+        label: 'GPT', host: 'api.openai.com', format: 'openai', keyPlaceholder: 'sk-…', tokenParam: 'max_completion_tokens',
+        endpoint: 'https://api.openai.com/v1/chat/completions', modelsUrl: 'https://api.openai.com/v1/models',
+        models: [m('gpt-6.1-terra', 'GPT-6.1 Terra · fast, efficient'), m('gpt-6-luna', 'GPT-6 Luna · cheapest'), m('gpt-6.1-sol', 'GPT-6.1 Sol · near-flagship')],
+      },
+      gemini: {
+        label: 'Gemini', host: 'generativelanguage.googleapis.com', format: 'gemini', keyPlaceholder: 'AIza…',
+        modelsUrl: 'https://generativelanguage.googleapis.com/v1beta/models?pageSize=200',
+        models: [m('gemini-3.5-flash-lite', 'Gemini 3.5 Flash-Lite · fastest, cheapest'), m('gemini-3.6-flash', 'Gemini 3.6 Flash · everyday'), m('gemini-3.8-flash', 'Gemini 3.8 Flash · strongest Flash')],
+      },
+      xai: {
+        label: 'Grok', host: 'api.x.ai', format: 'openai', keyPlaceholder: 'xai-…',
+        endpoint: 'https://api.x.ai/v1/chat/completions', modelsUrl: 'https://api.x.ai/v1/models',
+        models: [m('grok-4.7', 'Grok 4.7 · most capable'), m('grok-4.3', 'Grok 4.3 · cheaper')],
+      },
+      deepseek: {
+        label: 'DeepSeek', host: 'api.deepseek.com', format: 'openai', keyPlaceholder: 'sk-…',
+        endpoint: 'https://api.deepseek.com/chat/completions', modelsUrl: 'https://api.deepseek.com/models',
+        models: [m('deepseek-flash', 'DeepSeek Flash · fast'), m('deepseek-v4-pro', 'DeepSeek V4 Pro · stronger')],
+      },
+      groq: {
+        label: 'Groq', host: 'api.groq.com', format: 'openai', keyPlaceholder: 'gsk_…',
+        endpoint: 'https://api.groq.com/openai/v1/chat/completions', modelsUrl: 'https://api.groq.com/openai/v1/models',
+        models: [m('llama-3.3-70b-versatile', 'Llama 3.3 70B · versatile'), m('openai/gpt-oss-120b', 'GPT-OSS 120B · open weights'), m('llama-3.1-8b-instant', 'Llama 3.1 8B · instant')],
+      },
+      mistral: {
+        label: 'Mistral', host: 'api.mistral.ai', format: 'openai', keyPlaceholder: 'your-mistral-key',
+        endpoint: 'https://api.mistral.ai/v1/chat/completions', modelsUrl: 'https://api.mistral.ai/v1/models',
+        models: [m('mistral-large-latest', 'Mistral Large · latest'), m('mistral-small-latest', 'Mistral Small · fast')],
+      },
+      perplexity: {
+        label: 'Perplexity', host: 'api.perplexity.ai', format: 'openai', keyPlaceholder: 'pplx-…',
+        endpoint: 'https://api.perplexity.ai/chat/completions',
+        models: [m('sonar', 'Sonar · fast, web-grounded'), m('sonar-pro', 'Sonar Pro · deeper')],
+      },
+      together: {
+        label: 'Together', host: 'api.together.xyz', format: 'openai', keyPlaceholder: 'your-together-key',
+        endpoint: 'https://api.together.xyz/v1/chat/completions', modelsUrl: 'https://api.together.xyz/v1/models',
+        models: [m('openai/gpt-oss-120b', 'GPT-OSS 120B'), m('deepseek-ai/DeepSeek-V4.1-Flash', 'DeepSeek V4.1 Flash'), m('Qwen/Qwen3.8-Flash', 'Qwen 3.8 Flash')],
+      },
+      openrouter: {
+        label: 'OpenRouter', host: 'openrouter.ai', format: 'openai', keyPlaceholder: 'sk-or-…', listNeedsKey: false,
+        endpoint: 'https://openrouter.ai/api/v1/chat/completions', modelsUrl: 'https://openrouter.ai/api/v1/models',
+        models: [m('openai/gpt-6.1-terra', 'GPT-6.1 Terra (OpenAI)'), m('anthropic/claude-sonnet-5.5', 'Claude Sonnet 5.5 (Anthropic)'), m('google/gemini-3.5-flash-lite', 'Gemini 3.5 Flash-Lite (Google)')],
+      },
+      custom: { label: 'AI', host: 'the endpoint you set', format: 'openai', keyPlaceholder: 'API key (optional for local models)', models: [] },
+    };
+    for (const p of Object.values(PROVIDERS)) p.defaultModel = p.models[0]?.id || '';
+    const CUSTOM = '__custom__';
+
+    // Defaults shipped by the first version; replaced automatically on upgrade.
+    const OLD_DEFAULTS = {
+      anthropic: 'claude-sonnet-4-20250514', openai: 'gpt-4o', gemini: 'gemini-2.0-flash', xai: 'grok-2-latest',
+      deepseek: 'deepseek-chat', perplexity: 'sonar-pro', together: 'meta-llama/Llama-3.3-70B-Instruct-Turbo', openrouter: 'openai/gpt-4o',
     };
 
-    const SYSTEM_PROMPT = 'You are a calm, grounded late night friend. The user is sharing a thought with you. Respond thoughtfully and honestly in 2-4 sentences. No toxic positivity, no hype. Just real, warm, human.';
+    const PROMPTS = {
+      thought: 'You are a calm, grounded late night friend. The user is sharing a thought with you. Respond thoughtfully and honestly in 2-4 sentences. No toxic positivity, no hype. Just real, warm, human.',
+      week: 'You are a calm, grounded late night friend. The user is sharing the notes they saved over the past week, oldest first. Reflect back what you notice in 4-6 sentences: recurring themes, what seems to matter to them, and one gentle question to sit with. No toxic positivity, no hype, no bullet points. Just real, warm, human.',
+    };
 
-    // ── State ─────────────────────────────────────────────────────────────────
-    let cfg = JSON.parse(localStorage.getItem('lntSettings') || '{}');
-    cfg.provider       = cfg.provider       || 'anthropic';
-    cfg.keys           = cfg.keys           || {};
-    cfg.models         = cfg.models         || {};
-    cfg.customEndpoint = cfg.customEndpoint || '';
+    const TAGS = ['idea', 'personal', 'random', 'reminder'];
+    const MAX_TOKENS = 1024;
+    const WEEK_CHAR_LIMIT = 8000;
 
-    // Migrate legacy key
-    const legacyKey = localStorage.getItem('anthropicApiKey');
-    if (legacyKey && !cfg.keys.anthropic) cfg.keys.anthropic = legacyKey;
+    const $ = id => document.getElementById(id);
 
-    // Seed default models
-    for (const [id, p] of Object.entries(PROVIDERS)) {
-      if (!cfg.models[id]) cfg.models[id] = p.defaultModel;
+    // ── Storage helpers (storage can be blocked in private windows) ───────────
+    function readJSON(area, key, fallback) {
+      try { const v = area.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
+    }
+    function writeItem(area, key, value) {
+      try { area.setItem(key, value); return true; } catch { return false; }
+    }
+    function removeItem(area, key) {
+      try { area.removeItem(key); } catch { /* ignore */ }
     }
 
-    let notes             = JSON.parse(localStorage.getItem('lateNightNotes') || '[]');
+    // ── State ─────────────────────────────────────────────────────────────────
+    let cfg = readJSON(localStorage, 'lntSettings', {});
+    cfg.models         = cfg.models || {};
+    cfg.customEndpoint = cfg.customEndpoint || '';
+
+    // Upgrade from v1: keys used to live inside lntSettings in localStorage.
+    if (cfg.v !== 2) {
+      const oldKeys = { ...(cfg.keys || {}) };
+      const legacyKey = (() => { try { return localStorage.getItem('anthropicApiKey'); } catch { return null; } })();
+      if (legacyKey && !oldKeys.anthropic) oldKeys.anthropic = legacyKey;
+      const hasKeys = Object.values(oldKeys).some(Boolean);
+      // Keep existing users' keys where they were (they had opted into persistence).
+      cfg.rememberKeys = hasKeys;
+      if (hasKeys) writeItem(localStorage, 'lntKeys', JSON.stringify(oldKeys));
+      if (!hasKeys || !cfg.provider) cfg.provider = 'demo';
+      for (const [p, old] of Object.entries(OLD_DEFAULTS)) if (cfg.models[p] === old) delete cfg.models[p];
+      delete cfg.keys;
+      removeItem(localStorage, 'anthropicApiKey');
+      cfg.v = 2;
+      writeItem(localStorage, 'lntSettings', JSON.stringify(cfg));
+    }
+    if (!PROVIDERS[cfg.provider]) cfg.provider = 'demo';
+
+    let keys = readJSON(cfg.rememberKeys ? localStorage : sessionStorage, 'lntKeys', {});
+
+    function saveKeys() {
+      const json = JSON.stringify(keys);
+      if (cfg.rememberKeys) { writeItem(localStorage, 'lntKeys', json); removeItem(sessionStorage, 'lntKeys'); }
+      else { writeItem(sessionStorage, 'lntKeys', json); removeItem(localStorage, 'lntKeys'); }
+    }
+
+    function saveCfg() { writeItem(localStorage, 'lntSettings', JSON.stringify(cfg)); }
+
+    function modelFor(p) { return cfg.models[p] || PROVIDERS[p].defaultModel; }
+
+    let notes = readJSON(localStorage, 'lateNightNotes', []);
+    if (!Array.isArray(notes)) notes = [];
+
+    let demoEnabled    = null;   // null = unknown yet
     let currentAiResponse = '';
-    let pendingContent    = '';
-    let pendingSource     = '';
-    let currentTag        = null;
+    let pendingContent = '';
+    let pendingSource  = '';
+    let currentTag     = null;
+    let filterTag      = 'all';
+    let query          = '';
+    let editingId      = null;
+    let editingTag     = null;
+    let lastDeleted    = null;
+    let busy           = false;
+
+    function persistNotes() {
+      if (!writeItem(localStorage, 'lateNightNotes', JSON.stringify(notes))) {
+        showToast("Couldn't save to this browser's storage. Export your notes to keep them.");
+      }
+    }
 
     // ── Theme ─────────────────────────────────────────────────────────────────
-    const MOON_SVG = `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 12.5A7.5 7.5 0 0 1 7.5 2.5a7.5 7.5 0 1 0 10 10Z"/></svg>`;
-    const SUN_SVG  = `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="3.5"/><path d="M10 1v2M10 17v2M1 10h2M17 10h2M3.5 3.5l1.4 1.4M15.1 15.1l1.4 1.4M3.5 16.5l1.4-1.4M15.1 4.9l1.4-1.4"/></svg>`;
+    const MOON_SVG = `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.5 12.5A7.5 7.5 0 0 1 7.5 2.5a7.5 7.5 0 1 0 10 10Z"/></svg>`;
+    const SUN_SVG  = `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="3.5"/><path d="M10 1v2M10 17v2M1 10h2M17 10h2M3.5 3.5l1.4 1.4M15.1 15.1l1.4 1.4M3.5 16.5l1.4-1.4M15.1 4.9l1.4-1.4"/></svg>`;
 
     function applyTheme(theme) {
       document.documentElement.setAttribute('data-theme', theme);
-      // Show sun when dark (click to go light), moon when light (click to go dark)
-      document.getElementById('themeBtn').innerHTML = theme === 'dark' ? SUN_SVG : MOON_SVG;
-      localStorage.setItem('lntTheme', theme);
+      const btn = $('themeBtn');
+      btn.innerHTML = theme === 'dark' ? SUN_SVG : MOON_SVG;
+      btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+      writeItem(localStorage, 'lntTheme', theme);
     }
 
     function toggleTheme() {
@@ -793,247 +1299,1026 @@
       applyTheme(current === 'dark' ? 'light' : 'dark');
     }
 
-    // Init: saved → system preference → light
-    const savedTheme = localStorage.getItem('lntTheme');
-    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    applyTheme(savedTheme || (systemDark ? 'dark' : 'light'));
+    (() => {
+      let saved = null;
+      try { saved = localStorage.getItem('lntTheme'); } catch { /* ignore */ }
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      applyTheme(saved || (systemDark ? 'dark' : 'light'));
+    })();
 
-    // ── Init ──────────────────────────────────────────────────────────────────
-    renderNotes();
+    // ── Dialogs: focus in, trap Tab, Escape closes, focus back to opener ─────
+    let openDialog = null;
+    let returnFocus = null;
+    const FOCUSABLE = 'button:not([disabled]):not([hidden]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
 
-    // ── Settings ──────────────────────────────────────────────────────────────
-    function openSettings() {
-      const p = cfg.provider;
-      document.getElementById('providerSelect').value    = p;
-      document.getElementById('apiKeyInput').value       = cfg.keys[p] || '';
-      document.getElementById('modelInput').value        = cfg.models[p] || PROVIDERS[p].defaultModel;
-      document.getElementById('apiKeyInput').placeholder = PROVIDERS[p].keyPlaceholder;
-      const eg = document.getElementById('endpointGroup');
-      if (p === 'custom') {
-        eg.style.display = 'flex';
-        document.getElementById('endpointInput').value = cfg.customEndpoint;
-      } else {
-        eg.style.display = 'none';
+    function focusables(root) {
+      return [...root.querySelectorAll(FOCUSABLE)].filter(el => el.offsetParent !== null);
+    }
+
+    function showDialog(overlay, initial) {
+      returnFocus = document.activeElement;
+      overlay.classList.add('open');
+      openDialog = overlay;
+      $('app').inert = true;
+      (initial || focusables(overlay)[0])?.focus();
+    }
+
+    function hideDialog(overlay) {
+      overlay.classList.remove('open');
+      openDialog = null;
+      $('app').inert = false;
+      if (returnFocus && document.contains(returnFocus)) returnFocus.focus();
+      returnFocus = null;
+    }
+
+    document.addEventListener('keydown', e => {
+      if (!openDialog) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (openDialog.id === 'tagModal') cancelTag(); else closeSettings();
+        return;
       }
-      document.getElementById('settingsModal').classList.add('open');
-    }
-
-    function closeSettings() {
-      document.getElementById('settingsModal').classList.remove('open');
-    }
-
-    function handleSettingsOverlayClick(e) {
-      if (e.target === document.getElementById('settingsModal')) closeSettings();
-    }
-
-    function onProviderChange() {
-      const p = document.getElementById('providerSelect').value;
-      document.getElementById('apiKeyInput').value       = cfg.keys[p] || '';
-      document.getElementById('apiKeyInput').placeholder = PROVIDERS[p].keyPlaceholder;
-      document.getElementById('modelInput').value        = cfg.models[p] || PROVIDERS[p].defaultModel;
-      const eg = document.getElementById('endpointGroup');
-      if (p === 'custom') {
-        eg.style.display = 'flex';
-        document.getElementById('endpointInput').value = cfg.customEndpoint;
-      } else {
-        eg.style.display = 'none';
+      if (e.key === 'Tab') {
+        const items = focusables(openDialog);
+        if (!items.length) return;
+        const first = items[0], last = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
       }
-    }
-
-    function saveSettings() {
-      const p     = document.getElementById('providerSelect').value;
-      const key   = document.getElementById('apiKeyInput').value.trim();
-      const model = document.getElementById('modelInput').value.trim();
-
-      cfg.provider  = p;
-      cfg.keys[p]   = key;
-      cfg.models[p] = model || PROVIDERS[p].defaultModel;
-      if (p === 'custom') cfg.customEndpoint = document.getElementById('endpointInput').value.trim();
-
-      localStorage.setItem('lntSettings', JSON.stringify(cfg));
-
-      const msg = document.getElementById('savedMsg');
-      msg.classList.add('visible');
-      setTimeout(() => msg.classList.remove('visible'), 2000);
-    }
-
-    document.getElementById('apiKeyInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter') saveSettings();
     });
 
-    // ── LLM calls ─────────────────────────────────────────────────────────────
-    async function callLLM(thought) {
-      const p   = cfg.provider;
-      const key = cfg.keys[p];
-      if (!key) throw new Error('No API key saved. Open Settings (⚙) to add one.');
-
-      const model    = cfg.models[p] || PROVIDERS[p].defaultModel;
-      const provider = PROVIDERS[p];
-
-      if (provider.format === 'anthropic') return callAnthropic(thought, key, model);
-      if (provider.format === 'gemini')    return callGemini(thought, key, model);
-      const endpoint = p === 'custom' ? cfg.customEndpoint : provider.endpoint;
-      if (!endpoint) throw new Error('No endpoint URL set. Open Settings to add one.');
-      return callOpenAI(thought, key, model, endpoint);
-    }
-
-    async function callAnthropic(thought, key, model) {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type':      'application/json',
-          'x-api-key':         key,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-        body: JSON.stringify({ model, max_tokens: 512, system: SYSTEM_PROMPT, messages: [{ role: 'user', content: thought }] }),
+    for (const overlay of document.querySelectorAll('.modal-overlay')) {
+      overlay.addEventListener('click', e => {
+        if (e.target !== overlay) return;
+        if (overlay.id === 'tagModal') cancelTag(); else closeSettings();
       });
-      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `Error ${res.status}`); }
-      return (await res.json()).content[0].text;
     }
 
-    async function callGemini(thought, key, model) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ system_instruction: { parts: [{ text: SYSTEM_PROMPT }] }, contents: [{ parts: [{ text: thought }] }], generationConfig: { maxOutputTokens: 512 } }),
-      });
-      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `Error ${res.status}`); }
-      return (await res.json()).candidates[0].content.parts[0].text;
+    // ── Settings ──────────────────────────────────────────────────────────────
+    // Models fetched from a provider during this page visit, per provider.
+    const loadedModels = {};
+
+    function fillSettings(p) {
+      const prov = PROVIDERS[p];
+      const isDemo = p === 'demo';
+      $('modelGroup').hidden = isDemo;
+      $('keyGroup').hidden = isDemo;
+      $('rememberRow').hidden = isDemo;
+      $('endpointGroup').hidden = p !== 'custom';
+      $('apiKeyInput').value = keys[p] || '';
+      $('apiKeyInput').placeholder = prov.keyPlaceholder;
+      if (p === 'custom') $('endpointInput').value = cfg.customEndpoint;
+      $('rememberKeys').checked = !!cfg.rememberKeys;
+      $('testBtn').textContent = isDemo ? 'Check demo' : 'Test connection';
+      setTestResult('');
+      renderModelOptions(p, modelFor(p));
+      setModelHint(p);
+      renderPrivacyNote(p);
+      renderKeyHint(p);
     }
 
-    async function callOpenAI(thought, key, model, endpoint) {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-        body: JSON.stringify({ model, max_tokens: 512, messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: thought }] }),
-      });
-      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `Error ${res.status}`); }
-      return (await res.json()).choices[0].message.content;
+    function renderModelOptions(p, selected) {
+      const prov = PROVIDERS[p];
+      const select = $('modelSelect');
+      const curatedIds = new Set(prov.models.map(x => x.id));
+      const extra = (loadedModels[p] || []).filter(x => !curatedIds.has(x.id));
+      let html = '';
+      if (prov.models.length) {
+        html += `<optgroup label="Suggested">${prov.models.map((x, i) =>
+          `<option value="${escapeHtml(x.id)}">${escapeHtml(x.label)}${i === 0 ? ' (default)' : ''}</option>`).join('')}</optgroup>`;
+      }
+      if (extra.length) {
+        html += `<optgroup label="From your account (${extra.length})">${extra.map(x =>
+          `<option value="${escapeHtml(x.id)}">${escapeHtml(x.label && x.label !== x.id ? `${x.label} · ${x.id}` : x.id)}</option>`).join('')}</optgroup>`;
+      }
+      html += `<option value="${CUSTOM}">Custom model ID…</option>`;
+      select.innerHTML = html;
+
+      const known = [...select.options].some(o => o.value === selected && o.value !== CUSTOM);
+      select.value = selected && known ? selected : CUSTOM;
+      $('modelInput').value = known ? '' : (selected || '');
+      $('modelInput').hidden = select.value !== CUSTOM;
+      $('loadModelsBtn').hidden = !prov.modelsUrl && p !== 'custom';
+      $('loadModelsBtn').textContent = 'Load models from your account';
     }
 
-    // ── Chat ──────────────────────────────────────────────────────────────────
-    async function sendThought() {
-      const thought = document.getElementById('thoughtInput').value.trim();
-      if (!thought) return;
+    function setModelHint(p, text) {
+      if (text != null) { $('modelHint').textContent = text; return; }
+      $('modelHint').textContent = $('modelSelect').value === CUSTOM
+        ? 'Type the exact model ID your provider uses. Use "Test connection" to check it.'
+        : '';
+    }
 
-      const sendBtn     = document.getElementById('sendBtn');
-      const responseBox = document.getElementById('responseBox');
-      const errorBox    = document.getElementById('errorBox');
+    function selectedModel() {
+      return $('modelSelect').value === CUSTOM ? $('modelInput').value.trim() : $('modelSelect').value;
+    }
 
-      sendBtn.disabled    = true;
-      sendBtn.textContent = 'thinking…';
-      responseBox.style.display = 'none';
-      errorBox.style.display    = 'none';
+    // Settings exactly as they are in the form right now (may be unsaved).
+    function formSettings() {
+      const provider = $('providerSelect').value;
+      return {
+        provider,
+        key: $('apiKeyInput').value.trim(),
+        model: provider === 'demo' ? '' : selectedModel(),
+        endpoint: provider === 'custom' ? $('endpointInput').value.trim() : PROVIDERS[provider].endpoint,
+      };
+    }
 
+    // Settings as saved, used for real replies.
+    function savedSettings() {
+      const p = cfg.provider;
+      return { provider: p, key: keys[p] || '', model: modelFor(p), endpoint: p === 'custom' ? cfg.customEndpoint : PROVIDERS[p].endpoint };
+    }
+
+    const NON_CHAT = /(embed|tts|whisper|dall-e|image|imagen|veo|audio|realtime|transcri|moderation|rerank|guard|speech|voice|video|imagine|aqa|bison|gecko|computer-use|search-preview|:batch$)/i;
+
+    async function fetchModelList(s) {
+      const prov = PROVIDERS[s.provider];
+      let url = prov.modelsUrl;
+      if (s.provider === 'custom') {
+        if (!s.endpoint) throw new Error('Add the endpoint URL first.');
+        url = s.endpoint.replace(/\/chat\/completions\/?$/, '/models');
+      }
+      const needsKey = prov.listNeedsKey !== false && s.provider !== 'custom';
+      if (needsKey && !s.key) throw new Error(`Paste your ${prov.label} key first.`);
+
+      const headers = {};
+      if (prov.format === 'anthropic') Object.assign(headers, { 'x-api-key': s.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' });
+      else if (prov.format === 'gemini') headers['x-goog-api-key'] = s.key;
+      else if (s.key) headers.Authorization = `Bearer ${s.key}`;
+
+      let res;
+      try { res = await fetch(url, { headers }); }
+      catch { throw new Error(`${prov.host} doesn't allow listing models from a browser. Pick a suggestion or type a custom ID.`); }
+      if (!res.ok) throw await friendlyError(res, s);
+      const data = await res.json();
+
+      let list;
+      if (prov.format === 'gemini') {
+        list = (data.models || [])
+          .filter(x => (x.supportedGenerationMethods || []).includes('generateContent'))
+          .map(x => ({ id: x.name.replace(/^models\//, ''), label: x.displayName }));
+      } else {
+        list = (Array.isArray(data) ? data : data.data || []).map(x => ({ id: x.id, label: x.display_name || x.name || x.id }));
+      }
+      return list
+        .filter(x => x.id && !NON_CHAT.test(x.id))
+        .sort((a, b) => a.id.localeCompare(b.id));
+    }
+
+    async function loadModels() {
+      const s = formSettings();
+      const btn = $('loadModelsBtn');
+      const keep = selectedModel();
+      btn.disabled = true;
+      btn.textContent = 'Loading…';
       try {
-        const text = await callLLM(thought);
-        document.getElementById('responseText').textContent  = text;
-        document.getElementById('responseLabel').textContent = PROVIDERS[cfg.provider].label.toLowerCase();
-        responseBox.style.display = 'block';
-        currentAiResponse = text;
+        const list = await fetchModelList(s);
+        loadedModels[s.provider] = list;
+        renderModelOptions(s.provider, keep);
+        setModelHint(s.provider, list.length
+          ? `Loaded ${list.length} chat model${list.length === 1 ? '' : 's'} from ${PROVIDERS[s.provider].label === 'AI' ? 'your endpoint' : PROVIDERS[s.provider].host}.`
+          : 'Your account returned no chat models. Pick a suggestion or type a custom ID.');
       } catch (err) {
-        errorBox.textContent   = err.message;
-        errorBox.style.display = 'block';
+        setModelHint(s.provider, err.message);
       } finally {
-        sendBtn.disabled    = false;
-        sendBtn.textContent = 'Send it';
+        btn.disabled = false;
+        if (btn.textContent === 'Loading…') btn.textContent = 'Load models from your account';
       }
     }
 
-    document.getElementById('thoughtInput').addEventListener('keydown', e => {
+    function setTestResult(text, state) {
+      const el = $('testResult');
+      el.textContent = text;
+      el.className = 'test-result' + (state ? ' ' + state : '');
+    }
+
+    async function testConnection() {
+      const s = formSettings();
+      const btn = $('testBtn');
+      btn.disabled = true;
+      setTestResult('Checking…');
+      try {
+        if (s.provider === 'demo') {
+          await checkDemo();
+          if (demoEnabled) setTestResult('✓ The free demo is available.', 'ok');
+          else setTestResult("The free demo isn't available on this copy of the app. Pick a provider and add your own key.", 'bad');
+          return;
+        }
+        let reply = '';
+        const started = performance.now();
+        await generate('thought', 'Testing the connection. Reply with one short, calm sentence.', c => { reply += c; }, s);
+        const secs = ((performance.now() - started) / 1000).toFixed(1);
+        if (!reply.trim()) throw new Error('Connected, but the model sent back an empty reply.');
+        setTestResult(`✓ ${s.model} replied in ${secs}s. Remember to Save.`, 'ok');
+      } catch (err) {
+        setTestResult(err.message, 'bad');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function renderPrivacyNote(p) {
+      const note = $('privacyNote');
+      if (p === 'demo') {
+        note.innerHTML = '<strong>Free demo:</strong> your thought goes to this site\'s small server function, which passes it to Google Gemini (free tier, so Google may use it to improve its products). The server doesn\'t store it. '
+          + (demoEnabled === false ? '<strong>The demo isn\'t available on this copy of the app</strong>, so pick a provider and add your own key. ' : '')
+          + 'For more privacy, use your own key.';
+      } else {
+        note.innerHTML = `<strong>Your key stays in this browser.</strong> It is sent only to ${escapeHtml(PROVIDERS[p].host)}, straight from your browser. It never touches this site's server. `
+          + 'It\'s kept for this tab only unless you tick "Remember".';
+      }
+    }
+
+    function openSettings() {
+      // No server demo on this site: start people on Gemini, which has free keys.
+      const p = cfg.provider === 'demo' && demoEnabled === false ? 'gemini' : cfg.provider;
+      $('providerSelect').value = p;
+      fillSettings(p);
+      $('savedMsg').classList.remove('visible');
+      showDialog($('settingsModal'), $('providerSelect'));
+    }
+
+    function closeSettings() { hideDialog($('settingsModal')); }
+
+    function saveSettings() {
+      const p     = $('providerSelect').value;
+      const key   = $('apiKeyInput').value.trim();
+      const model = selectedModel();
+      if (p !== 'demo' && !model) {
+        setModelHint(p, 'Type a model ID, or pick one from the list.');
+        $('modelInput').focus();
+        return;
+      }
+
+      cfg.provider = p;
+      cfg.rememberKeys = $('rememberKeys').checked;
+      if (p !== 'demo') {
+        if (key) keys[p] = key; else delete keys[p];
+        if (model && model !== PROVIDERS[p].defaultModel) cfg.models[p] = model; else delete cfg.models[p];
+      }
+      if (p === 'custom') cfg.customEndpoint = $('endpointInput').value.trim();
+
+      saveCfg();
+      saveKeys();
+      updateModeChip();
+      flashSaved('saved ✓');
+    }
+
+    function forgetKeys() {
+      keys = {};
+      removeItem(localStorage, 'lntKeys');
+      removeItem(sessionStorage, 'lntKeys');
+      $('apiKeyInput').value = '';
+      flashSaved('keys forgotten');
+    }
+
+    function flashSaved(text) {
+      const msg = $('savedMsg');
+      msg.textContent = text;
+      msg.classList.add('visible');
+      clearTimeout(flashSaved.t);
+      flashSaved.t = setTimeout(() => msg.classList.remove('visible'), 2200);
+    }
+
+    // True when a reply can actually be requested with the saved settings.
+    function aiReady() {
+      const p = cfg.provider;
+      if (p === 'demo') return demoEnabled !== false;
+      if (p === 'custom') return !!cfg.customEndpoint;
+      return !!keys[p];
+    }
+
+    function updateModeChip() {
+      const p = cfg.provider;
+      const ok = aiReady();
+      let text;
+      if (p === 'demo') text = demoEnabled === false ? 'No AI yet · add a key' : 'Free demo · Gemini';
+      else text = ok ? `${PROVIDERS[p].label} · your key` : `${PROVIDERS[p].label} · add your key`;
+      $('modeText').textContent = text;
+      $('modeDot').classList.toggle('off', !ok);
+      $('modeChip').setAttribute('aria-label', `AI: ${text}. Open AI settings`);
+      // Only nudge once we know the free demo isn't there.
+      $('setupHint').hidden = ok || (p === 'demo' && demoEnabled === null);
+    }
+
+    // Where to get a key; `free` marks providers with a no-cost tier.
+    const KEY_LINKS = {
+      gemini:     { url: 'https://aistudio.google.com/apikey', host: 'aistudio.google.com', free: true },
+      groq:       { url: 'https://console.groq.com/keys', host: 'console.groq.com', free: true },
+      anthropic:  { url: 'https://console.anthropic.com/settings/keys', host: 'console.anthropic.com' },
+      openai:     { url: 'https://platform.openai.com/api-keys', host: 'platform.openai.com' },
+      openrouter: { url: 'https://openrouter.ai/keys', host: 'openrouter.ai' },
+      mistral:    { url: 'https://console.mistral.ai/api-keys', host: 'console.mistral.ai' },
+      deepseek:   { url: 'https://platform.deepseek.com/api_keys', host: 'platform.deepseek.com' },
+    };
+
+    function renderKeyHint(p) {
+      const link = KEY_LINKS[p];
+      $('keyHint').innerHTML = link
+        ? `Get a key at <a href="${link.url}" target="_blank" rel="noopener noreferrer">${link.host}</a>${link.free ? ' (free tier available)' : ''}.`
+        : '';
+    }
+
+    // A clearly labelled sample, so people can see what the app does before adding a key.
+    const EXAMPLE = {
+      thought: "I keep wondering if I picked the right career. It's 2am and I can't sleep.",
+      reply: "That sounds like a lot to carry this late at night. It makes sense that it's still turning over in your head; things that matter usually do. You don't need to figure it all out right now. Sometimes just naming it is enough for tonight.",
+    };
+
+    function showExample() {
+      const box = $('responseBox'), text = $('responseText');
+      $('errorBox').style.display = 'none';
+      $('responseLabel').textContent = 'example · not a live reply';
+      text.textContent = '';
+      const q = document.createElement('p');
+      q.className = 'example-thought';
+      q.textContent = `“${EXAMPLE.thought}”`;
+      text.append(q, document.createTextNode(EXAMPLE.reply));
+      currentAiResponse = '';
+      $('saveAiBtn').hidden = true;
+      box.style.display = 'block';
+    }
+
+    $('settingsBtn').addEventListener('click', openSettings);
+    $('modeChip').addEventListener('click', openSettings);
+    $('privacyLink').addEventListener('click', openSettings);
+    $('addKeyBtn').addEventListener('click', openSettings);
+    $('exampleBtn').addEventListener('click', showExample);
+    $('themeBtn').addEventListener('click', toggleTheme);
+    $('providerSelect').addEventListener('change', e => fillSettings(e.target.value));
+    $('modelSelect').addEventListener('change', () => {
+      const custom = $('modelSelect').value === CUSTOM;
+      $('modelInput').hidden = !custom;
+      if (custom) $('modelInput').focus();
+      setModelHint($('providerSelect').value);
+      setTestResult('');
+    });
+    $('apiKeyInput').addEventListener('input', () => setTestResult(''));
+    $('loadModelsBtn').addEventListener('click', loadModels);
+    $('testBtn').addEventListener('click', testConnection);
+    $('saveSettingsBtn').addEventListener('click', saveSettings);
+    $('forgetKeysBtn').addEventListener('click', forgetKeys);
+    $('settingsModal').querySelector('[data-close]').addEventListener('click', closeSettings);
+    for (const id of ['apiKeyInput', 'modelInput', 'endpointInput']) {
+      $(id).addEventListener('keydown', e => { if (e.key === 'Enter') saveSettings(); });
+    }
+
+    // ── LLM calls (all streamed) ──────────────────────────────────────────────
+    // Turns a failed response into a message a person can act on.
+    async function friendlyError(res, s) {
+      const prov = PROVIDERS[s.provider];
+      const body = await res.json().catch(() => ({}));
+      const raw = body.error?.message || (typeof body.error === 'string' ? body.error : '') || body.message || '';
+      if (s.provider === 'demo') return new Error(raw || `The demo returned an error (${res.status}).`);
+      const name = prov.label === 'AI' ? 'The endpoint' : prov.label;
+      const detail = raw ? ` (${raw.length > 160 ? raw.slice(0, 157) + '…' : raw})` : '';
+      let msg;
+      if (res.status === 401 || res.status === 403) msg = `${name} rejected your API key. Check it in AI settings.`;
+      else if (res.status === 404 || (res.status === 400 && /model/i.test(raw))) msg = `${name} doesn't recognise the model "${s.model}". Pick another model in AI settings.`;
+      else if (res.status === 402 || /credit|billing|quota|balance/i.test(raw)) msg = `${name} says your account is out of credit or quota.`;
+      else if (res.status === 429) msg = `${name} is rate limiting you. Wait a moment and try again.`;
+      else if (res.status >= 500) msg = `${name} is having trouble right now (${res.status}). Try again in a moment.`;
+      else msg = `${name} returned an error (${res.status}).`;
+      const err = new Error(msg + detail);
+      err.status = res.status;
+      return err;
+    }
+
+    async function request(url, init, s) {
+      try {
+        return await fetch(url, init);
+      } catch {
+        let host = url;
+        try { host = new URL(url, location.href).host; } catch { /* keep url */ }
+        throw new Error(`Couldn't reach ${host}. Check your connection${s.provider === 'custom' ? ', the endpoint URL, and that it allows requests from this site (CORS)' : ''}.`);
+      }
+    }
+
+    // Reads a server-sent-events body and hands each parsed `data:` JSON to onData.
+    async function readSSE(res, onData) {
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const raw of lines) {
+          const line = raw.trim();
+          if (!line.startsWith('data:')) continue;
+          const data = line.slice(5).trim();
+          if (!data || data === '[DONE]') continue;
+          let parsed;
+          try { parsed = JSON.parse(data); } catch { continue; }
+          onData(parsed);
+        }
+      }
+    }
+
+    function isJSON(res) { return (res.headers.get('content-type') || '').includes('application/json'); }
+
+    // Streams a reply. `s` defaults to the saved settings; Test connection passes the form's.
+    // Resolves to the model ID that actually answered.
+    async function generate(mode, text, onChunk, s = savedSettings()) {
+      const prov = PROVIDERS[s.provider];
+      const system = PROMPTS[mode];
+
+      if (prov.format === 'demo') return streamDemo(mode, text, onChunk);
+
+      const { key, model } = s;
+      if (!key && s.provider !== 'custom') throw new Error(`No ${prov.label} key yet. Open AI settings to add one, or switch to the free demo.`);
+      if (!model) throw new Error('No model chosen. Open AI settings to pick one.');
+
+      if (prov.format === 'anthropic') {
+        const res = await request('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': key,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true',
+          },
+          body: JSON.stringify({ model, max_tokens: MAX_TOKENS, system, stream: true, messages: [{ role: 'user', content: text }] }),
+        }, s);
+        if (!res.ok) throw await friendlyError(res, s);
+        let used = model;
+        await readSSE(res, d => {
+          if (d.type === 'message_start' && d.message?.model) used = d.message.model;
+          if (d.type === 'content_block_delta' && d.delta?.type === 'text_delta') onChunk(d.delta.text);
+          if (d.type === 'error') throw new Error(d.error?.message || 'The stream was interrupted.');
+        });
+        return used;
+      }
+
+      if (prov.format === 'gemini') {
+        // Key goes in a header, never in the URL (URLs end up in logs and history).
+        const res = await request(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: system }] },
+            contents: [{ role: 'user', parts: [{ text }] }],
+            generationConfig: { maxOutputTokens: MAX_TOKENS },
+          }),
+        }, s);
+        if (!res.ok) throw await friendlyError(res, s);
+        await readSSE(res, d => {
+          for (const part of d.candidates?.[0]?.content?.parts || []) if (part.text && !part.thought) onChunk(part.text);
+        });
+        return model;
+      }
+
+      // OpenAI-compatible
+      const endpoint = s.endpoint;
+      if (!endpoint) throw new Error('No endpoint URL set. Open AI settings to add one.');
+      const headers = { 'Content-Type': 'application/json' };
+      if (key) headers.Authorization = `Bearer ${key}`;
+      const res = await request(endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          model,
+          stream: true,
+          [prov.tokenParam || 'max_tokens']: MAX_TOKENS,
+          messages: [{ role: 'system', content: system }, { role: 'user', content: text }],
+        }),
+      }, s);
+      if (!res.ok) throw await friendlyError(res, s);
+      if (isJSON(res)) { // endpoint ignored stream: true
+        const d = await res.json();
+        onChunk(d.choices?.[0]?.message?.content || '');
+        return d.model || model;
+      }
+      let used = model;
+      await readSSE(res, d => {
+        if (d.error) throw new Error(d.error.message || 'The stream was interrupted.');
+        if (d.model) used = d.model;
+        const piece = d.choices?.[0]?.delta?.content;
+        if (piece) onChunk(piece);
+      });
+      return used;
+    }
+
+    async function streamDemo(mode, text, onChunk) {
+      if (demoEnabled === false) throw new Error("The free demo isn't available here. Open AI settings and add your own key.");
+      const s = { provider: 'demo' };
+      const res = await request('/api/reflect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode, text }),
+      }, s);
+      if (!res.ok) throw await friendlyError(res, s);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        onChunk(decoder.decode(value, { stream: true }));
+      }
+      return res.headers.get('X-Demo-Model') || 'gemini';
+    }
+
+    async function checkDemo() {
+      try {
+        const res = await fetch('/api/reflect', { method: 'GET', cache: 'no-store' });
+        demoEnabled = res.ok && isJSON(res) ? !!(await res.json()).enabled : false;
+      } catch {
+        demoEnabled = false;
+      }
+      const demoOption = $('providerSelect').querySelector('option[value="demo"]');
+      demoOption.disabled = !demoEnabled;
+      demoOption.textContent = demoEnabled ? 'Free demo (Gemini, rate limited)' : 'Free demo (not available on this site)';
+      updateModeChip();
+    }
+
+    // ── Running a reply into the response box ─────────────────────────────────
+    async function runReply(mode, text, labelPrefix, triggerBtn, busyText) {
+      if (busy) return;
+      busy = true;
+      const sendBtn = $('sendBtn'), weekBtn = $('weekBtn');
+      const responseBox = $('responseBox'), responseText = $('responseText'), errorBox = $('errorBox');
+      const original = triggerBtn.textContent;
+      sendBtn.disabled = weekBtn.disabled = true;
+      triggerBtn.textContent = busyText;
+      errorBox.style.display = 'none';
+      $('saveAiBtn').hidden = true;
+
+      const isDemo = cfg.provider === 'demo';
+      const setLabel = name => {
+        const label = name + (isDemo ? ' · free demo' : '');
+        $('responseLabel').textContent = labelPrefix ? `${labelPrefix} · ${label}` : label;
+      };
+      setLabel(isDemo ? 'gemini' : modelFor(cfg.provider) || PROVIDERS[cfg.provider].label.toLowerCase());
+      responseText.textContent = '';
+      responseText.classList.add('streaming');
+      responseBox.setAttribute('aria-busy', 'true');
+      responseBox.style.display = 'block';
+      if (mode === 'week') responseBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      let full = '';
+      try {
+        const used = await generate(mode, text, chunk => { full += chunk; responseText.textContent = full; });
+        if (used) setLabel(used);
+        full = full.trim();
+        if (!full) throw new Error('The AI sent back an empty reply. Try again?');
+        responseText.textContent = full;
+        currentAiResponse = full;
+        $('saveAiBtn').hidden = false;
+      } catch (err) {
+        if (!full) responseBox.style.display = 'none';
+        else { currentAiResponse = full.trim(); $('saveAiBtn').hidden = false; }
+        showError(err.message || 'Something went wrong.');
+      } finally {
+        responseText.classList.remove('streaming');
+        responseBox.setAttribute('aria-busy', 'false');
+        sendBtn.disabled = weekBtn.disabled = false;
+        triggerBtn.textContent = original;
+        busy = false;
+      }
+    }
+
+    function showError(message) {
+      const box = $('errorBox');
+      box.textContent = message;
+      const addButton = (label, fn) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = label;
+        b.addEventListener('click', fn);
+        box.append(b);
+      };
+      if (/settings|key/i.test(message)) addButton('Open AI settings', openSettings);
+      if (!aiReady()) addButton('See an example', showExample);
+      box.style.display = 'block';
+    }
+
+    const NEEDS_KEY = 'Add an AI key to get a reply. It stays in this browser, and Google Gemini and Groq keys are free.';
+
+    function sendThought() {
+      const thought = $('thoughtInput').value.trim();
+      if (!thought) { $('thoughtInput').focus(); return; }
+      if (!aiReady()) { showError(NEEDS_KEY); return; }
+      runReply('thought', thought, '', $('sendBtn'), 'thinking…');
+    }
+
+    function reflectOnWeek() {
+      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      const recent = notes
+        .filter(n => new Date(n.timestamp).getTime() >= weekAgo)
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      if (!recent.length) { showToast('No notes from the last 7 days yet. Save a few first.'); return; }
+      if (!aiReady()) {
+        showError(NEEDS_KEY);
+        $('errorBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      // Keep the newest notes if the week is too long to send.
+      const lines = [];
+      let size = 0;
+      for (const n of [...recent].reverse()) {
+        const line = `[${formatTime(n.timestamp)}${n.tag ? ' · ' + n.tag : ''}] ${n.content}`;
+        if (size + line.length + 2 > WEEK_CHAR_LIMIT) break;
+        lines.unshift(line);
+        size += line.length + 2;
+      }
+      if (!lines.length) lines.push(recent[recent.length - 1].content.slice(0, WEEK_CHAR_LIMIT));
+      runReply('week', lines.join('\n\n'), 'your week', $('weekBtn'), 'reflecting…');
+    }
+
+    $('sendBtn').addEventListener('click', sendThought);
+    $('weekBtn').addEventListener('click', reflectOnWeek);
+    $('thoughtInput').addEventListener('keydown', e => {
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) sendThought();
     });
 
-    // ── Tag modal ─────────────────────────────────────────────────────────────
+    // ── Tag dialog ────────────────────────────────────────────────────────────
+    function setPressed(buttons, isPressed) {
+      buttons.forEach(b => b.setAttribute('aria-pressed', String(isPressed(b))));
+    }
+
     function openTagModal(content, source) {
       pendingContent = content;
       pendingSource  = source;
       currentTag     = null;
-      document.querySelectorAll('.tag-option').forEach(el => el.classList.remove('selected'));
-      document.getElementById('tagModal').classList.add('open');
+      setPressed(document.querySelectorAll('.tag-option'), () => false);
+      showDialog($('tagModal'), document.querySelector('.tag-option'));
     }
 
     function selectTag(tag) {
-      currentTag = tag;
-      document.querySelectorAll('.tag-option').forEach(el => el.classList.remove('selected'));
-      document.querySelector(`.tag-option-${tag}`).classList.add('selected');
+      currentTag = currentTag === tag ? null : tag;
+      setPressed(document.querySelectorAll('.tag-option'), b => b.dataset.tag === currentTag);
     }
 
     function confirmSave(tag) {
-      document.getElementById('tagModal').classList.remove('open');
       const content = pendingContent;
       const source  = pendingSource;
-      pendingContent = '';
-      pendingSource  = '';
-      currentTag     = null;
+      pendingContent = pendingSource = '';
+      currentTag = null;
+      hideDialog($('tagModal'));
       if (!content) return;
       saveNote(content, tag);
-      if (source === 'manual') document.getElementById('noteInput').value = '';
+      if (source === 'manual') $('noteInput').value = '';
+      showToast(tag ? `Saved with tag "${tag}".` : 'Note saved.');
     }
 
-    function handleTagOverlayClick(e) {
-      if (e.target === document.getElementById('tagModal')) confirmSave(null);
+    function cancelTag() {
+      pendingContent = pendingSource = '';
+      currentTag = null;
+      hideDialog($('tagModal'));
     }
+
+    document.querySelectorAll('.tag-option').forEach(b => b.addEventListener('click', () => selectTag(b.dataset.tag)));
+    $('noTagBtn').addEventListener('click', () => confirmSave(null));
+    $('confirmTagBtn').addEventListener('click', () => confirmSave(currentTag));
 
     function triggerSaveAiNote() {
-      if (!currentAiResponse) return;
-      openTagModal(currentAiResponse, 'ai');
+      if (currentAiResponse) openTagModal(currentAiResponse, 'ai');
     }
 
     function triggerSaveManualNote() {
-      const content = document.getElementById('noteInput').value.trim();
-      if (!content) return;
+      const content = $('noteInput').value.trim();
+      if (!content) { $('noteInput').focus(); return; }
       openTagModal(content, 'manual');
     }
 
+    $('saveAiBtn').addEventListener('click', triggerSaveAiNote);
+    $('addNoteBtn').addEventListener('click', triggerSaveManualNote);
+    $('noteInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) triggerSaveManualNote();
+    });
+
     // ── Notes ─────────────────────────────────────────────────────────────────
+    function newId() {
+      return (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+    }
+
     function saveNote(content, tag) {
-      notes.unshift({ id: Date.now(), content, tag: tag || null, timestamp: new Date().toISOString() });
-      localStorage.setItem('lateNightNotes', JSON.stringify(notes));
+      notes.unshift({ id: newId(), content, tag: tag || null, timestamp: new Date().toISOString() });
+      persistNotes();
       renderNotes();
     }
 
+    function findIndex(id) { return notes.findIndex(n => String(n.id) === id); }
+
     function deleteNote(id) {
-      notes = notes.filter(n => n.id !== id);
-      localStorage.setItem('lateNightNotes', JSON.stringify(notes));
+      const index = findIndex(id);
+      if (index < 0) return;
+      const visible = visibleNotes();
+      const pos = visible.findIndex(n => String(n.id) === id);
+      lastDeleted = { note: notes[index], index };
+      notes.splice(index, 1);
+      persistNotes();
       renderNotes();
+      // Keep keyboard focus nearby instead of dropping it on <body>.
+      const buttons = document.querySelectorAll('#notesList [data-action="delete"]');
+      (buttons[Math.min(pos, buttons.length - 1)] || $('searchInput')).focus();
+      showToast('Note deleted.', 'Undo', undoDelete, 7000);
+    }
+
+    function undoDelete() {
+      if (!lastDeleted) return;
+      const { note, index } = lastDeleted;
+      lastDeleted = null;
+      notes.splice(Math.min(index, notes.length), 0, note);
+      persistNotes();
+      renderNotes();
+      hideToast();
+      document.querySelector(`#notesList [data-id="${CSS.escape(String(note.id))}"][data-action="edit"]`)?.focus();
+      showToast('Note restored.');
+    }
+
+    function startEdit(id) {
+      const note = notes[findIndex(id)];
+      if (!note) return;
+      editingId = id;
+      editingTag = note.tag;
+      renderNotes();
+      const ta = $('editInput');
+      ta.focus();
+      ta.setSelectionRange(ta.value.length, ta.value.length);
+    }
+
+    function cancelEdit() {
+      const id = editingId;
+      editingId = null;
+      renderNotes();
+      document.querySelector(`#notesList [data-id="${CSS.escape(id)}"][data-action="edit"]`)?.focus();
+    }
+
+    function saveEdit() {
+      const index = findIndex(editingId);
+      const content = $('editInput').value.trim();
+      if (index < 0) { editingId = null; renderNotes(); return; }
+      if (!content) { $('editInput').focus(); return; }
+      const id = editingId;
+      notes[index] = { ...notes[index], content, tag: editingTag || null, updatedAt: new Date().toISOString() };
+      editingId = null;
+      persistNotes();
+      renderNotes();
+      document.querySelector(`#notesList [data-id="${CSS.escape(id)}"][data-action="edit"]`)?.focus();
+      showToast('Note updated.');
     }
 
     function formatTime(iso) {
       const d = new Date(iso);
+      if (isNaN(d)) return '';
       return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
         + ' · '
         + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     }
 
     function escapeHtml(str) {
-      return str
+      return String(str)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function highlight(text) {
+      const safe = escapeHtml(text);
+      if (!query) return safe;
+      const q = escapeHtml(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return safe.replace(new RegExp(q, 'gi'), m => `<mark>${m}</mark>`);
+    }
+
+    function visibleNotes() {
+      const q = query.toLowerCase();
+      return notes.filter(n => {
+        if (filterTag === 'untagged' ? n.tag : (filterTag !== 'all' && n.tag !== filterTag)) return false;
+        if (q && !n.content.toLowerCase().includes(q) && !(n.tag || '').includes(q)) return false;
+        return true;
+      });
     }
 
     function renderNotes() {
-      const list = document.getElementById('notesList');
+      const list = $('notesList');
+      const shown = visibleNotes();
+      const filtered = filterTag !== 'all' || query;
+      $('notesCount').textContent = notes.length ? (filtered ? `· ${shown.length} of ${notes.length}` : `· ${notes.length}`) : '';
+      $('weekBtn').hidden = !notes.length;
+
       if (!notes.length) {
-        list.innerHTML = '<div class="no-notes">No notes yet. Thoughts are fleeting — save one.</div>';
+        list.innerHTML = '<div class="no-notes">No notes yet. Thoughts are fleeting. Save one.</div>';
         return;
       }
-      list.innerHTML = notes.map(note => `
-        <div class="note-item">
-          <div class="note-header">
-            ${note.tag ? `<span class="tag-badge tag-${note.tag}">${note.tag}</span>` : ''}
-            <span class="note-time">${formatTime(note.timestamp)}</span>
-          </div>
-          <div class="note-content">${escapeHtml(note.content)}</div>
-          <div class="note-footer">
-            <button class="delete-btn" onclick="deleteNote(${note.id})">delete</button>
-          </div>
-        </div>
-      `).join('');
+      if (!shown.length) {
+        list.innerHTML = '<div class="no-notes">Nothing matches. Try another tag or search.</div>';
+        return;
+      }
+
+      list.innerHTML = shown.map(note => {
+        const id = escapeHtml(String(note.id));
+        if (String(note.id) === editingId) {
+          return `
+            <div class="note-item note-edit" role="group" aria-label="Edit note">
+              <label for="editInput" class="sr-only">Note text</label>
+              <textarea id="editInput">${escapeHtml(note.content)}</textarea>
+              <div class="chips" role="group" aria-label="Tag">
+                ${TAGS.map(t => `<button type="button" class="chip" data-action="edit-tag" data-tag="${t}" aria-pressed="${editingTag === t}">${t}</button>`).join('')}
+              </div>
+              <div class="note-edit-actions">
+                <button type="button" class="btn-ghost" data-action="cancel-edit">Cancel</button>
+                <button type="button" class="btn-primary" data-action="save-edit">Save</button>
+              </div>
+            </div>`;
+        }
+        return `
+          <article class="note-item">
+            <div class="note-header">
+              ${note.tag ? `<span class="tag-badge tag-${escapeHtml(note.tag)}">${escapeHtml(note.tag)}</span>` : ''}
+              <span class="note-time">${formatTime(note.timestamp)}${note.updatedAt ? ' · edited' : ''}</span>
+            </div>
+            <div class="note-content">${highlight(note.content)}</div>
+            <div class="note-footer">
+              <button type="button" class="note-btn" data-action="edit" data-id="${id}">edit</button>
+              <button type="button" class="note-btn danger" data-action="delete" data-id="${id}">delete</button>
+            </div>
+          </article>`;
+      }).join('');
+    }
+
+    $('notesList').addEventListener('click', e => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const { action, id, tag } = btn.dataset;
+      if (action === 'edit') startEdit(id);
+      else if (action === 'delete') deleteNote(id);
+      else if (action === 'cancel-edit') cancelEdit();
+      else if (action === 'save-edit') saveEdit();
+      else if (action === 'edit-tag') {
+        editingTag = editingTag === tag ? null : tag;
+        setPressed(btn.parentElement.querySelectorAll('.chip'), b => b.dataset.tag === editingTag);
+      }
+    });
+
+    $('notesList').addEventListener('keydown', e => {
+      if (e.target.id !== 'editInput') return;
+      if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); }
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); saveEdit(); }
+    });
+
+    $('filterChips').addEventListener('click', e => {
+      const btn = e.target.closest('[data-filter]');
+      if (!btn) return;
+      filterTag = btn.dataset.filter;
+      setPressed($('filterChips').querySelectorAll('.chip'), b => b.dataset.filter === filterTag);
+      renderNotes();
+    });
+
+    $('searchInput').addEventListener('input', e => {
+      query = e.target.value.trim();
+      renderNotes();
+    });
+
+    // ── Export / import ───────────────────────────────────────────────────────
+    function download(filename, text, type) {
+      const url = URL.createObjectURL(new Blob([text], { type }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.append(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function stamp() { return new Date().toISOString().slice(0, 10); }
+
+    function exportJSON() {
+      if (!notes.length) { showToast('No notes to export yet.'); return; }
+      const data = { app: 'late-night-thoughts', version: 1, exportedAt: new Date().toISOString(), notes };
+      download(`late-night-thoughts-${stamp()}.json`, JSON.stringify(data, null, 2), 'application/json');
+      showToast(`Exported ${notes.length} note${notes.length === 1 ? '' : 's'} as JSON.`);
+    }
+
+    // Markdown stays readable but keeps a small metadata comment per note so it can be imported again.
+    function exportMarkdown() {
+      if (!notes.length) { showToast('No notes to export yet.'); return; }
+      const blocks = notes.map(n => {
+        const meta = JSON.stringify({ id: n.id, timestamp: n.timestamp, tag: n.tag || null, ...(n.updatedAt ? { updatedAt: n.updatedAt } : {}) });
+        return `## ${formatTime(n.timestamp)}${n.tag ? ` · #${n.tag}` : ''}\n<!-- lnt ${meta} -->\n\n${n.content}\n`;
+      });
+      const md = `# Late Night Thoughts\n\nExported ${new Date().toLocaleDateString('en-US', { dateStyle: 'long' })} · ${notes.length} notes\n\n---\n\n${blocks.join('\n---\n\n')}`;
+      download(`late-night-thoughts-${stamp()}.md`, md, 'text/markdown');
+      showToast(`Exported ${notes.length} note${notes.length === 1 ? '' : 's'} as Markdown.`);
+    }
+
+    function parseMarkdown(text) {
+      text = text.replace(/\r\n/g, '\n');
+      const parts = text.split(/^<!-- lnt (\{.*\}) -->$/m);
+      const out = [];
+      if (parts.length > 1) {
+        for (let i = 1; i < parts.length; i += 2) {
+          let meta = {};
+          try { meta = JSON.parse(parts[i]); } catch { /* use defaults */ }
+          let body = parts[i + 1] || '';
+          // Drop the next note's separator and heading that sit before its marker.
+          if (i + 2 < parts.length) body = body.replace(/\n---\n+## [^\n]*\n?$/, '');
+          out.push({ ...meta, content: body.trim() });
+        }
+        return out;
+      }
+      // Plain Markdown from elsewhere: one note per block separated by "---".
+      for (const block of text.split(/^\s*---\s*$/m)) {
+        let content = block.trim();
+        if (!content || /^# /.test(content)) continue; // document title block
+        let tag = null;
+        const heading = content.match(/^#{1,6} (.*)\n?/);
+        if (heading) {
+          const t = heading[1].match(/#(idea|personal|random|reminder)\b/);
+          if (t) tag = t[1];
+          content = content.slice(heading[0].length).trim();
+        }
+        if (content) out.push({ content, tag });
+      }
+      return out;
+    }
+
+    function cleanNote(raw) {
+      if (!raw || typeof raw.content !== 'string' || !raw.content.trim()) return null;
+      const ts = new Date(raw.timestamp);
+      return {
+        id: raw.id != null ? String(raw.id) : newId(),
+        content: raw.content.trim(),
+        tag: TAGS.includes(raw.tag) ? raw.tag : null,
+        timestamp: isNaN(ts) ? new Date().toISOString() : ts.toISOString(),
+        ...(raw.updatedAt && !isNaN(new Date(raw.updatedAt)) ? { updatedAt: new Date(raw.updatedAt).toISOString() } : {}),
+      };
+    }
+
+    async function importFile(file) {
+      let incoming;
+      try {
+        const text = await file.text();
+        if (/\.json$/i.test(file.name) || text.trim().startsWith('{') || text.trim().startsWith('[')) {
+          const data = JSON.parse(text);
+          incoming = Array.isArray(data) ? data : data.notes;
+          if (!Array.isArray(incoming)) throw new Error('No notes found in that file.');
+        } else {
+          incoming = parseMarkdown(text);
+        }
+      } catch (err) {
+        showToast(err instanceof SyntaxError ? "That JSON file couldn't be read." : (err.message || 'Import failed.'));
+        return;
+      }
+      const existing = new Set(notes.map(n => String(n.id)));
+      const existingContent = new Set(notes.map(n => n.content + '|' + n.timestamp));
+      let added = 0, skipped = 0;
+      for (const raw of incoming) {
+        const n = cleanNote(raw);
+        if (!n) { skipped++; continue; }
+        if (existing.has(n.id) || existingContent.has(n.content + '|' + n.timestamp)) { skipped++; continue; }
+        existing.add(n.id);
+        notes.push(n);
+        added++;
+      }
+      notes.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      persistNotes();
+      renderNotes();
+      showToast(`Imported ${added} note${added === 1 ? '' : 's'}${skipped ? `, skipped ${skipped} duplicate or empty` : ''}.`);
+    }
+
+    $('exportMdBtn').addEventListener('click', exportMarkdown);
+    $('exportJsonBtn').addEventListener('click', exportJSON);
+    $('importBtn').addEventListener('click', () => $('importFile').click());
+    $('importFile').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) importFile(file);
+      e.target.value = '';
+    });
+
+    // ── Toast ─────────────────────────────────────────────────────────────────
+    let toastTimer = null;
+    function showToast(text, actionLabel, onAction, ms = 3500) {
+      const toast = $('toast'), action = $('toastAction');
+      $('toastText').textContent = text;
+      action.hidden = !actionLabel;
+      action.textContent = actionLabel || '';
+      action.onclick = onAction || null;
+      toast.classList.add('visible');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(hideToast, ms);
+    }
+    function hideToast() {
+      $('toast').classList.remove('visible');
+      $('toastAction').hidden = true;
+    }
+    $('toast').addEventListener('mouseenter', () => clearTimeout(toastTimer));
+    $('toast').addEventListener('mouseleave', () => { toastTimer = setTimeout(hideToast, 2500); });
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    renderNotes();
+    updateModeChip();
+    checkDemo();
+
+    // Installable + offline (needs https or localhost).
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
     }
   </script>
 </body>
