@@ -1,0 +1,4 @@
+dev-server.mjs
+.env.example
+docs/
+README.md
